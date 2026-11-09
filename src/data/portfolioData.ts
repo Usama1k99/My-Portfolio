@@ -100,6 +100,23 @@ export const portfolioData: PortfolioData = {
 
   projects: [
     {
+      id: "enigmatrix",
+      title: "Enigmatrix — High-Performance Encryption Engine",
+      category: "Desktop App",
+      language: "Python / PyQt6",
+      description: "Custom high-performance desktop file encryption tool featuring 1024×1024 subkey matrix generation, PRNG-driven permutations, multi-threaded CPU parallel execution, and optional RSA key wrapping.",
+      technicalDetails: [
+        "Multi-stage deterministic key expansion generating 1024x1024 subkey matrices via SHA-256 and BLAKE2b.",
+        "Block-level cryptographic transformations combining XOR operations, PRNG matrix permutations, and modular arithmetic.",
+        "Parallel CPU core distribution via multithreading for maximum throughput and hardware benchmarking.",
+        "Dual interface architecture: modern PyQt6 desktop GUI with embedded interactive terminal CLI."
+      ],
+      githubUrl: "https://github.com/Usama1k99/Enigmatrix",
+      liveUrl: "https://github.com/Usama1k99/Enigmatrix",
+      featured: true,
+      tags: ["Python", "PyQt6", "NumPy", "Cryptography", "RSA", "Multithreading", "Desktop GUI"]
+    },
+    {
       id: "encryptify",
       title: "Encryptify (encsite) — Cryptographic Suite",
       category: "Web Engineering",
@@ -117,27 +134,11 @@ export const portfolioData: PortfolioData = {
       tags: ["Python", "Django", "NumPy", "Cryptography", "Steganography", "Security"]
     },
     {
-      id: "enigmatrix",
-      title: "Enigmatrix Cryptographic Suite",
-      category: "Web Engineering",
-      language: "TypeScript / React",
-      description: "Modern cryptography playground and cipher suite implementing multi-stage algorithmic encryptions, hashing verification, and visual transformation workflows.",
-      technicalDetails: [
-        "Multi-algorithm visual transformation supporting classic and modern encryption routines.",
-        "Zero external tracking, client-side browser execution using Web Cryptography API.",
-        "Sub-millisecond transformation times with high-density cryptographic metrics."
-      ],
-      githubUrl: "https://github.com/Usama1k99/Enigmatrix",
-      liveUrl: "https://github.com/Usama1k99/Enigmatrix",
-      featured: true,
-      tags: ["TypeScript", "React", "Cryptography", "Security"]
-    },
-    {
       id: "darkpad",
       title: "DarkPad Minimalist Editor",
       category: "Desktop App",
-      language: "JavaScript / Node.js",
-      description: "Distraction-free dark mode text editor tailored for developers and technical writers, with local auto-save, syntax highlighting, and zero latency.",
+      language: "Python / PyQt",
+      description: "Distraction-free dark mode text editor tailored for developers and technical writers, with local auto-save, regex multi-pattern search, and zero latency.",
       technicalDetails: [
         "Instant keystroke rendering with custom virtualized buffer management.",
         "Air-gapped local storage with automatic periodic state snapshots.",
@@ -146,39 +147,7 @@ export const portfolioData: PortfolioData = {
       githubUrl: "https://github.com/Usama1k99/DarkPad",
       liveUrl: "https://github.com/Usama1k99/DarkPad",
       featured: true,
-      tags: ["JavaScript", "Desktop GUI", "Productivity", "Slate UI"]
-    },
-    {
-      id: "encryptor",
-      title: "Encryptor Desktop Security Tool",
-      category: "Desktop App",
-      language: "Python",
-      description: "Cryptographic desktop application implementing an expanded polyalphabetic substitution algorithm over an extended ASCII domain.",
-      technicalDetails: [
-        "Extended character mapping beyond standard 26 alphabets to full ASCII character range.",
-        "Custom key matrix generation with reversible transformation passes.",
-        "Native desktop GUI built for cross-platform file and text encryption."
-      ],
-      githubUrl: "https://github.com/Usama1k99/Encryptor",
-      liveUrl: "https://github.com/Usama1k99/Encryptor",
-      featured: true,
-      tags: ["Python", "Cryptography", "Desktop GUI", "Security"]
-    },
-    {
-      id: "password-manager",
-      title: "Offline Password Manager",
-      category: "Desktop App",
-      language: "Python",
-      description: "Local, air-gapped credential vault utilizing automated cryptographic key derivation and zero-cloud encrypted local storage.",
-      technicalDetails: [
-        "Zero external network dependencies ensuring complete privacy and isolation from cloud leaks.",
-        "Automated cryptographic salt and key generation flow.",
-        "Encrypted local database with secure master key authentication."
-      ],
-      githubUrl: "https://github.com/Usama1k99/Offline-Password-Manager",
-      liveUrl: "https://github.com/Usama1k99/Offline-Password-Manager",
-      featured: true,
-      tags: ["Python", "Security", "Local Storage", "Encryption"]
+      tags: ["Python", "PyQt", "Desktop GUI", "Productivity", "Regex"]
     },
     {
       id: "discord-bot",
@@ -194,6 +163,38 @@ export const portfolioData: PortfolioData = {
       githubUrl: "https://github.com/Usama1k99/Discord-Bot-using-py",
       featured: false,
       tags: ["Python", "MongoDB", "AsyncIO", "API Integration"]
+    },
+    {
+      id: "encryptor",
+      title: "Encryptor Desktop Security Tool",
+      category: "Desktop App",
+      language: "Python",
+      description: "Cryptographic desktop application implementing an expanded polyalphabetic substitution algorithm over an extended ASCII domain.",
+      technicalDetails: [
+        "Extended character mapping beyond standard 26 alphabets to full ASCII character range.",
+        "Custom key matrix generation with reversible transformation passes.",
+        "Native desktop GUI built for cross-platform file and text encryption."
+      ],
+      githubUrl: "https://github.com/Usama1k99/Encryptor",
+      liveUrl: "https://github.com/Usama1k99/Encryptor",
+      featured: false,
+      tags: ["Python", "Cryptography", "Desktop GUI", "Security"]
+    },
+    {
+      id: "password-manager",
+      title: "Offline Password Manager",
+      category: "Desktop App",
+      language: "Python",
+      description: "Local, air-gapped credential vault utilizing automated cryptographic key derivation and zero-cloud encrypted local storage.",
+      technicalDetails: [
+        "Zero external network dependencies ensuring complete privacy and isolation from cloud leaks.",
+        "Automated cryptographic salt and key generation flow.",
+        "Encrypted local database with secure master key authentication."
+      ],
+      githubUrl: "https://github.com/Usama1k99/Offline-Password-Manager",
+      liveUrl: "https://github.com/Usama1k99/Offline-Password-Manager",
+      featured: false,
+      tags: ["Python", "Security", "Local Storage", "Encryption"]
     },
     {
       id: "ciphers",

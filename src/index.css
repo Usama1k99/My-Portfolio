@@ -53,10 +53,10 @@
   transform: translateY(-3px);
 }
 
-/* 2px Frosted Glass Blur for Cards */
-.card-blur-2px {
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+/* 1px Frosted Glass Blur for Cards */
+.card-blur-1px {
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
 }
 
 /* Hide default cursor on fine-pointer devices (desktop) in favor of the custom kinetic cursor */

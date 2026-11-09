@@ -81,7 +81,32 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     };
 
     const onMouseUp = () => {
+      if (mouse.isMouseDown && clickProgress > 0.05) {
+        // Sudden tension release: impart an outward impulse velocity to particles held near the cursor
+        const tensionRelease = clickProgress; // intensity of the held tension
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
+          const dx = p.x - mouse.x;
+          const dy = p.y - mouse.y;
+          const dist = Math.hypot(dx, dy);
+
+          // Particles within the held vortex zone get suddenly pushed outward
+          if (dist < 120 && dist > 0.1) {
+            const angle = Math.atan2(dy, dx);
+            const impulseForce = ((120 - dist) / 120) * tensionRelease * (4.0 + Math.random() * 2.5);
+            // Sudden outward fling
+            p.originX += Math.cos(angle) * (impulseForce * 6.0);
+            p.originY += Math.sin(angle) * (impulseForce * 6.0);
+            p.x += Math.cos(angle) * (impulseForce * 5.0);
+            p.y += Math.sin(angle) * (impulseForce * 5.0);
+            p.vx = Math.cos(angle) * (impulseForce * 0.45);
+            p.vy = Math.sin(angle) * (impulseForce * 0.45);
+          }
+        }
+      }
       mouse.isMouseDown = false;
+      // Snap clickProgress down immediately so tension releases suddenly
+      clickProgress = 0.0;
     };
 
     const onMouseLeave = () => {

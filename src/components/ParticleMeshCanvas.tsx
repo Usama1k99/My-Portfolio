@@ -50,7 +50,8 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       y: -9999,
       targetX: -9999,
       targetY: -9999,
-      radius: 175,
+      radius: 110,
+      glowRadius: 65,
       active: false,
     };
 
@@ -147,7 +148,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
         renderCtx.clearRect(0, 0, width, height);
 
-        // Subtle ambient cursor luminescence
+        // Reduced subtle ambient cursor luminescence
         if (mouse.active && mouse.x > 0 && mouse.y > 0) {
           const radialGlow = renderCtx.createRadialGradient(
             mouse.x,
@@ -155,14 +156,14 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             0,
             mouse.x,
             mouse.y,
-            mouse.radius * 1.2
+            mouse.glowRadius
           );
-          radialGlow.addColorStop(0, 'rgba(6, 182, 212, 0.045)');
-          radialGlow.addColorStop(0.5, 'rgba(16, 185, 129, 0.02)');
+          radialGlow.addColorStop(0, 'rgba(6, 182, 212, 0.05)');
+          radialGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.015)');
           radialGlow.addColorStop(1, 'rgba(15, 23, 42, 0)');
           renderCtx.fillStyle = radialGlow;
           renderCtx.beginPath();
-          renderCtx.arc(mouse.x, mouse.y, mouse.radius * 1.2, 0, Math.PI * 2);
+          renderCtx.arc(mouse.x, mouse.y, mouse.glowRadius, 0, Math.PI * 2);
           renderCtx.fill();
         }
 
@@ -185,31 +186,30 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
-            // Interactive magnetic vortex physics around cursor
+            // Interactive soft magnetic deflection around cursor (gentle curve instead of rapid accumulation)
             const dx = mouse.x - p.x;
             const dy = mouse.y - p.y;
             const dist = Math.hypot(dx, dy);
 
             if (dist < mouse.radius && dist > 0.1) {
               const force = (mouse.radius - dist) / mouse.radius; // 0 to 1
-              // Tangential rotational swirl component
               const angle = Math.atan2(dy, dx);
-              const swirlAngle = angle + Math.PI * 0.55;
-              const swirlForce = force * 2.8;
+              const swirlAngle = angle + Math.PI * 0.5;
+              const swirlForce = force * 0.7;
+              const deflectForce = force * 0.8;
 
-              // Displace away + swirl around
-              p.x -= Math.cos(swirlAngle) * swirlForce + (dx / dist) * force * 1.8;
-              p.y -= Math.sin(swirlAngle) * swirlForce + (dy / dist) * force * 1.8;
+              // Gentle deflection and orbital curve
+              p.x -= Math.cos(swirlAngle) * swirlForce + (dx / dist) * deflectForce;
+              p.y -= Math.sin(swirlAngle) * swirlForce + (dy / dist) * deflectForce;
 
-              // Proximity energy boost
-              p.radius = p.baseRadius * (1 + force * 0.7);
-              p.alpha = Math.min(1, p.baseAlpha + force * 0.45);
+              p.radius = p.baseRadius * (1 + force * 0.35);
+              p.alpha = Math.min(0.85, p.baseAlpha + force * 0.25);
             } else {
-              // Gentle spring relaxation back to home orbit
-              p.x += (targetX - p.x) * 0.06;
-              p.y += (targetY - p.y) * 0.06;
-              p.radius += (p.baseRadius - p.radius) * 0.08;
-              p.alpha += (p.baseAlpha - p.alpha) * 0.08;
+              // Gentle spring relaxation back to natural orbit
+              p.x += (targetX - p.x) * 0.045;
+              p.y += (targetY - p.y) * 0.045;
+              p.radius += (p.baseRadius - p.radius) * 0.06;
+              p.alpha += (p.baseAlpha - p.alpha) * 0.06;
             }
 
             // Subtle luminance pulse

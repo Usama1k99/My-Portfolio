@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import Projects from './components/Projects';
 import ScrollProgress from './components/ScrollProgress';
 import BackToTop from './components/BackToTop';
+import { TiltCard } from './components/TiltCard';
 import { portfolioData } from './data/portfolioData';
 import {
   Briefcase,
@@ -88,9 +89,10 @@ export const App: React.FC = () => {
 
             <div className="space-y-6">
               {experience.map((exp, idx) => (
-                <div
+                <TiltCard
                   key={idx}
-                  className="relative p-6 sm:p-8 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm card-hover hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-xl hover:shadow-slate-950/60 transition-all duration-300 overflow-hidden group"
+                  maxTilt={4}
+                  className="relative p-6 sm:p-8 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                 >
                   {/* Subtle top border illumination */}
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/0 to-transparent group-hover:via-indigo-400/60 transition-all duration-500" />
@@ -144,7 +146,7 @@ export const App: React.FC = () => {
                       </span>
                     ))}
                   </div>
-                </div>
+                </TiltCard>
               ))}
             </div>
           </div>
@@ -172,9 +174,10 @@ export const App: React.FC = () => {
 
                 <div className="space-y-4">
                   {certifications.map((cert, idx) => (
-                    <div
+                    <TiltCard
                       key={idx}
-                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm card-hover hover:border-emerald-500/40 hover:bg-slate-900/80 hover:shadow-xl hover:shadow-slate-950/60 transition-all duration-300 overflow-hidden group"
+                      maxTilt={5}
+                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-emerald-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                     >
                       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/0 to-transparent group-hover:via-emerald-400/60 transition-all duration-500" />
 
@@ -197,7 +200,7 @@ export const App: React.FC = () => {
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </TiltCard>
                   ))}
                 </div>
               </div>
@@ -220,9 +223,10 @@ export const App: React.FC = () => {
 
                 <div className="space-y-4">
                   {education.map((edu, idx) => (
-                    <div
+                    <TiltCard
                       key={idx}
-                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm card-hover hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-xl hover:shadow-slate-950/60 transition-all duration-300 overflow-hidden group"
+                      maxTilt={5}
+                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                     >
                       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/0 to-transparent group-hover:via-indigo-400/60 transition-all duration-500" />
 
@@ -247,7 +251,7 @@ export const App: React.FC = () => {
                           </div>
                         ))}
                       </div>
-                    </div>
+                    </TiltCard>
                   ))}
                 </div>
               </div>
@@ -280,9 +284,10 @@ export const App: React.FC = () => {
                 const theme = getSkillCategoryTheme(idx);
 
                 return (
-                  <div
+                  <TiltCard
                     key={idx}
-                    className={`relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm card-hover ${theme.hoverBorder} hover:bg-slate-900/90 hover:shadow-xl hover:shadow-slate-950/60 transition-all duration-300 overflow-hidden group`}
+                    maxTilt={5}
+                    className={`relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm ${theme.hoverBorder} hover:bg-slate-900/90 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group`}
                   >
                     <div
                       className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/0 to-transparent ${theme.accentGradient} transition-all duration-500`}
@@ -302,7 +307,7 @@ export const App: React.FC = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </TiltCard>
                 );
               })}
             </div>

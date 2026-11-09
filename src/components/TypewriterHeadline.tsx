@@ -10,8 +10,7 @@ interface TypewriterProps {
 export const TypewriterHeadline: React.FC<TypewriterProps> = ({
   phrases = [
     'ServiceNow Developer & Software Engineer',
-    'CMDB & CSDM 4.0 Architecture Specialist',
-    'Applied Cryptography & Systems Builder',
+    'Worked with Multi-Modal Cryptography Algorithms',
   ],
   typingSpeed = 65,
   deletingSpeed = 35,

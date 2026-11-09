@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Github, ExternalLink, Lock, ShieldCheck, Terminal, Binary, FileCode } from 'lucide-react';
 import { portfolioData } from '../data/portfolioData';
 import { ProjectItem } from '../types/portfolio';
+import { TiltCard } from './TiltCard';
 
 export const Projects: React.FC = () => {
   const [filter, setFilter] = useState<string>('All');
@@ -88,9 +89,10 @@ export const Projects: React.FC = () => {
             const styles = getCategoryStyles(project.category);
 
             return (
-              <div
+              <TiltCard
                 key={project.id}
-                className="relative flex flex-col justify-between p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm card-hover hover:border-slate-700/80 hover:bg-slate-900/90 hover:shadow-xl hover:shadow-slate-950/70 transition-all duration-300 group overflow-hidden"
+                maxTilt={6.5}
+                className="relative flex flex-col justify-between p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-slate-700/80 hover:bg-slate-900/90 hover:shadow-2xl hover:shadow-slate-950/80 transition-all duration-300 group overflow-hidden"
               >
                 {/* Subtle top border glow on card hover */}
                 <div
@@ -164,7 +166,7 @@ export const Projects: React.FC = () => {
                     )}
                   </div>
                 </div>
-              </div>
+              </TiltCard>
             );
           })}
         </div>

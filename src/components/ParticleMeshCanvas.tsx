@@ -23,6 +23,8 @@ interface Particle {
   orbitSpeed: number;
   orbitAngle: number;
   connectedAt: number;
+  releaseDuration: number;
+  releaseProgress: number;
 }
 
 export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
@@ -81,32 +83,19 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     };
 
     const onMouseUp = () => {
-      if (mouse.isMouseDown && clickProgress > 0.05) {
-        // Sudden tension release: impart an outward impulse velocity to particles held near the cursor
-        const tensionRelease = clickProgress; // intensity of the held tension
-        for (let i = 0; i < particles.length; i++) {
-          const p = particles[i];
-          const dx = p.x - mouse.x;
-          const dy = p.y - mouse.y;
-          const dist = Math.hypot(dx, dy);
-
-          // Particles within the held vortex zone get suddenly pushed outward
-          if (dist < 120 && dist > 0.1) {
-            const angle = Math.atan2(dy, dx);
-            const impulseForce = ((120 - dist) / 120) * tensionRelease * (4.0 + Math.random() * 2.5);
-            // Sudden outward fling
-            p.originX += Math.cos(angle) * (impulseForce * 6.0);
-            p.originY += Math.sin(angle) * (impulseForce * 6.0);
-            p.x += Math.cos(angle) * (impulseForce * 5.0);
-            p.y += Math.sin(angle) * (impulseForce * 5.0);
-            p.vx = Math.cos(angle) * (impulseForce * 0.45);
-            p.vy = Math.sin(angle) * (impulseForce * 0.45);
-          }
+      mouse.isMouseDown = false;
+      // Trigger individual organic release timings (0.3s to 0.5s) for particles
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 120) {
+          // Reset progress and randomize release duration between 300ms (0.3s) and 500ms (0.5s)
+          p.releaseDuration = 300 + Math.random() * 200;
+          p.releaseProgress = 1.0; // Start at full tension, decays to 0 over 0.3s - 0.5s
         }
       }
-      mouse.isMouseDown = false;
-      // Snap clickProgress down immediately so tension releases suddenly
-      clickProgress = 0.0;
     };
 
     const onMouseLeave = () => {
@@ -155,6 +144,9 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         orbitSpeed: (Math.random() - 0.5) * 0.012,
         orbitAngle: Math.random() * Math.PI * 2,
         connectedAt: -1,
+        // Individualized release duration between 0.3s (300ms) and 0.5s (500ms)
+        releaseDuration: 300 + Math.random() * 200,
+        releaseProgress: 0,
       };
     });
 
@@ -190,8 +182,8 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
           // Slowly pull together over exactly 1.0 second (1000ms)
           clickProgress = Math.min(1.0, clickProgress + deltaMs / 1000);
         } else {
-          // Gently release back over exactly 0.7 seconds (700ms)
-          clickProgress = Math.max(0.0, clickProgress - deltaMs / 700);
+          // Progress decays as particles release into free space
+          clickProgress = Math.max(0.0, clickProgress - deltaMs / 400);
         }
 
         // Smooth cubic easing (smoothstep: 3x^2 - 2x^3) for organic deceleration
@@ -209,9 +201,6 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         const clickRadius = generalRadius * 0.7; // 70px
         const currentRadius = generalRadius - easedProgress * (generalRadius - clickRadius); // 100px -> 70px
 
-        // Particles orbit comfortably away from center (min orbit 32px resting, 24px clicked - never pulling too close)
-        const minOrbitDist = 32 - easedProgress * 8;
-        const orbitCompression = 1.0 - easedProgress * 0.2;
         const pullSpeed = 0.16 + easedProgress * 0.04;
         const speedMult = 1.0 + easedProgress * 0.15;
 
@@ -233,34 +222,45 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
-            // Interactive dynamic orbital vortex around cursor center (with smooth click gravity)
+            // Decay individual release progress (0.3s - 0.5s range)
+            if (p.releaseProgress > 0) {
+              p.releaseProgress = Math.max(0, p.releaseProgress - deltaMs / p.releaseDuration);
+            }
+
+            // Interactive dynamic orbital vortex around cursor center
             const dx = p.x - mouse.x;
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            if (dist < currentRadius && dist > 0.1 && mouse.active) {
+            const isHeldOrReleasing = mouse.isMouseDown || p.releaseProgress > 0;
+
+            if (dist < currentRadius && dist > 0.1 && mouse.active && isHeldOrReleasing) {
               const force = (currentRadius - dist) / currentRadius; // 0 to 1
               const currentAngle = Math.atan2(dy, dx);
               const orbitDir = i % 2 === 0 ? 1 : -1;
               const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // On click: slightly pull closer to the dot center
-              const clampedOrbitDist = Math.max(minOrbitDist, dist * orbitCompression);
+              // Individual smooth blend: when releasing, smoothly expands back from compressed orbit into free space
+              const effectiveTension = mouse.isMouseDown ? easedProgress : p.releaseProgress;
+              const particleOrbitCompression = 1.0 - effectiveTension * 0.2;
+              const particleMinOrbitDist = 32 - effectiveTension * 8;
+              const clampedOrbitDist = Math.max(particleMinOrbitDist, dist * particleOrbitCompression);
 
               const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
               const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
 
-              // Graceful, smooth attraction pull speed
-              p.x += (orbitalTargetX - p.x) * pullSpeed;
-              p.y += (orbitalTargetY - p.y) * pullSpeed;
+              // Graceful, smooth attraction pull speed, smoothly relaxing back as releaseProgress reaches 0
+              const currentPull = pullSpeed * (mouse.isMouseDown ? 1.0 : effectiveTension);
+              p.x += (orbitalTargetX - p.x) * currentPull;
+              p.y += (orbitalTargetY - p.y) * currentPull;
 
-              p.radius = p.baseRadius * (1 + force * (0.3 + easedProgress * 0.15));
-              p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + easedProgress * 0.15));
+              p.radius = p.baseRadius * (1 + force * (0.3 + effectiveTension * 0.15));
+              p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + effectiveTension * 0.15));
             } else {
-              // Gentle spring relaxation back to natural wandering orbit
-              p.x += (targetX - p.x) * 0.045;
-              p.y += (targetY - p.y) * 0.045;
+              // Smoothly and gracefully relaxes back to wandering free space orbit
+              p.x += (targetX - p.x) * 0.055;
+              p.y += (targetY - p.y) * 0.055;
               p.radius += (p.baseRadius - p.radius) * 0.06;
               p.alpha += (p.baseAlpha - p.alpha) * 0.06;
             }

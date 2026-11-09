@@ -97,7 +97,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < 120) {
+        if (dist < 140) {
           // Reset progress and randomize release duration between 300ms (0.3s) and 500ms (0.5s)
           p.releaseDuration = 300 + Math.random() * 200;
           p.releaseProgress = 1.0; // Start at full tension, decays to 0 over 0.3s - 0.5s
@@ -112,6 +112,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       mouse.targetY = -9999;
       mouse.active = false;
       mouse.isMouseDown = false;
+      stationaryTime = 0;
     };
 
     window.addEventListener('mousemove', onMouseMove, { passive: true });
@@ -121,7 +122,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
     const effectiveCount = width < 768 ? Math.floor(particleCount * 0.5) : particleCount;
 
-    // Create particles with diverse depth and harmonic orbits
+    // Create particles with restored original speed and harmonic orbits
     const particles: Particle[] = Array.from({ length: effectiveCount }, () => {
       const rx = Math.random() * width;
       const ry = Math.random() * height;
@@ -138,17 +139,17 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         y: ry,
         originX: rx,
         originY: ry,
-        vx: (Math.random() - 0.5) * 0.12,
-        vy: (Math.random() - 0.5) * 0.12,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: (Math.random() - 0.5) * 0.35,
         radius: baseR,
         baseRadius: baseR,
         alpha: baseA,
         baseAlpha: baseA,
         colorType,
         phase: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.008 + Math.random() * 0.012,
-        orbitRadius: Math.random() * 20 + 8,
-        orbitSpeed: (Math.random() - 0.5) * 0.004,
+        pulseSpeed: 0.015 + Math.random() * 0.02,
+        orbitRadius: Math.random() * 25 + 10,
+        orbitSpeed: (Math.random() - 0.5) * 0.012,
         orbitAngle: Math.random() * Math.PI * 2,
         connectedAt: -1,
         // Individualized release duration between 0.3s (300ms) and 0.5s (500ms)
@@ -216,7 +217,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         }
 
         const stationaryProgress = stationaryTime / 10000; // 0.0 to 1.0 over 10s
-        // Maximum gravity cutoff: strictly 0 gravity beyond outerGravityRadius (which expands up to 2x generalRadius)
+        // Maximum gravity cutoff: strictly 0 gravity beyond outerGravityRadius (expands up to 2x generalRadius)
         const outerGravityRadius = generalRadius * (1.0 + stationaryProgress); // 100px -> 200px
 
         const pullSpeed = 0.16 + easedProgress * 0.04;
@@ -231,14 +232,47 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             p.originX += p.vx;
             p.originY += p.vy;
 
-            // Screen boundary wraparound
-            if (p.originX < -30) p.originX = width + 30;
-            else if (p.originX > width + 30) p.originX = -30;
-            if (p.originY < -30) p.originY = height + 30;
-            else if (p.originY > height + 30) p.originY = -30;
+            // Seamless screen wraparound: shift both position and origin together
+            // so particles never create a giant displacement vector across the screen
+            if (p.x < -40) {
+              p.x += width + 80;
+              p.originX += width + 80;
+            } else if (p.x > width + 40) {
+              p.x -= width + 80;
+              p.originX -= width + 80;
+            }
+
+            if (p.y < -40) {
+              p.y += height + 80;
+              p.originY += height + 80;
+            } else if (p.y > height + 40) {
+              p.y -= height + 80;
+              p.originY -= height + 80;
+            }
+
+            if (p.originX < -40) {
+              p.originX += width + 80;
+              p.x += width + 80;
+            } else if (p.originX > width + 40) {
+              p.originX -= width + 80;
+              p.x -= width + 80;
+            }
+
+            if (p.originY < -40) {
+              p.originY += height + 80;
+              p.y += height + 80;
+            } else if (p.originY > height + 40) {
+              p.originY -= height + 80;
+              p.y -= height + 80;
+            }
 
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
+
+            // Regular speed for this particle (linear drift + orbit harmonic)
+            const regularSpeed = Math.hypot(p.vx, p.vy) + Math.abs(p.orbitSpeed) * p.orbitRadius;
+            // Strict speed ceiling: particles can move relatively fast, but strictly at most 2x regular speed
+            const maxAllowedSpeed = Math.max(0.65, regularSpeed * 2.0);
 
             // Decay individual release progress (0.3s - 0.5s range)
             if (p.releaseProgress > 0) {
@@ -250,7 +284,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            // Gravity only affects particles within outerGravityRadius (strictly 0 outside)
+            // Gravity strictly 0 beyond outerGravityRadius
             const isInGravityRange = dist <= outerGravityRadius && dist > 0.1 && mouse.active;
             const isHeldOrReleasing = mouse.isMouseDown || p.releaseProgress > 0;
 
@@ -258,7 +292,6 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               // Calculate gradient force: 1.0 inside innerRadius, smoothly tapering to 0.0 at outerGravityRadius
               let gravityStrength = 1.0;
               if (dist > innerRadius) {
-                // Smooth cosine / linear gradient between innerRadius and outerGravityRadius
                 const t = (outerGravityRadius - dist) / Math.max(1, outerGravityRadius - innerRadius);
                 gravityStrength = Math.max(0, Math.min(1, t));
               }
@@ -279,18 +312,31 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
               // Graceful, smooth attraction pull speed weighted by gravity gradient
               const effectivePull = pullSpeed * gravityStrength * (mouse.isMouseDown ? 1.0 : (p.releaseProgress > 0 ? effectiveTension : 0.7));
-              
-              // Blend towards orbital target according to gravity strength, rest follows natural path
-              p.x += (orbitalTargetX - p.x) * effectivePull + (targetX - p.x) * (1 - gravityStrength) * 0.02;
-              p.y += (orbitalTargetY - p.y) * effectivePull + (targetY - p.y) * (1 - gravityStrength) * 0.02;
+
+              // Keep origin gently following the particle so when released into free space, it doesn't snap
+              p.originX = p.x - Math.cos(p.orbitAngle) * p.orbitRadius;
+              p.originY = p.y - Math.sin(p.orbitAngle) * p.orbitRadius;
+
+              p.x += (orbitalTargetX - p.x) * effectivePull;
+              p.y += (orbitalTargetY - p.y) * effectivePull;
 
               const force = Math.max(0, (innerRadius - dist) / innerRadius);
               p.radius = p.baseRadius * (1 + force * (0.3 + effectiveTension * 0.15));
               p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + effectiveTension * 0.15));
             } else {
-              // Strictly 0 gravity beyond outer boundary: smoothly and gracefully relaxes to wandering free space orbit
-              p.x += (targetX - p.x) * 0.04;
-              p.y += (targetY - p.y) * 0.04;
+              // Strictly 0 gravity beyond outer boundary: smoothly relaxes to wandering free space orbit
+              // Clamped to at most 2x regular speed so particles never travel at super speed across the screen
+              let stepX = (targetX - p.x) * 0.055;
+              let stepY = (targetY - p.y) * 0.055;
+              const stepDist = Math.hypot(stepX, stepY);
+
+              if (stepDist > maxAllowedSpeed) {
+                stepX = (stepX / stepDist) * maxAllowedSpeed;
+                stepY = (stepY / stepDist) * maxAllowedSpeed;
+              }
+
+              p.x += stepX;
+              p.y += stepY;
               p.radius += (p.baseRadius - p.radius) * 0.06;
               p.alpha += (p.baseAlpha - p.alpha) * 0.06;
             }

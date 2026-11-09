@@ -52,3 +52,18 @@
 .card-hover:hover {
   transform: translateY(-3px);
 }
+
+/* Hide default cursor on fine-pointer devices (desktop) in favor of the custom kinetic cursor */
+@media (pointer: fine) {
+  body,
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label {
+    cursor: none !important;
+  }
+}
+

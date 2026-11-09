@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import Projects from './components/Projects';
 import ScrollProgress from './components/ScrollProgress';
 import BackToTop from './components/BackToTop';
+import CustomCursor from './components/CustomCursor';
 import { TiltCard } from './components/TiltCard';
 import { portfolioData } from './data/portfolioData';
 import {
@@ -57,6 +58,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 selection:bg-cyan-500/20 selection:text-cyan-300">
+      {/* Precision Kinetic Magnetic Custom Cursor */}
+      <CustomCursor />
+
       {/* Scroll Progress Bar at very top */}
       <ScrollProgress />
 

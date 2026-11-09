@@ -50,7 +50,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       y: -9999,
       targetX: -9999,
       targetY: -9999,
-      radius: 110,
+      radius: 65,
       glowRadius: 65,
       active: false,
     };

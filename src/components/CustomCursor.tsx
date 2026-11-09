@@ -4,6 +4,20 @@ export const CustomCursor: React.FC = () => {
   const dotRef = useRef<HTMLDivElement | null>(null);
   const ringRef = useRef<HTMLDivElement | null>(null);
 
+  // Persistent coordinates and target references across renders
+  const coordsRef = useRef({
+    mouseX: -9999,
+    mouseY: -9999,
+    ringX: -9999,
+    ringY: -9999,
+    ringW: 28,
+    ringH: 28,
+    ringRadius: 9999,
+    isMouseDown: false,
+    activeTarget: null as HTMLElement | null,
+    hasMoved: false,
+  });
+
   const [isVisible, setIsVisible] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -21,55 +35,53 @@ export const CustomCursor: React.FC = () => {
     }
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // Real-time cursor coordinates
-    let mouseX = -100;
-    let mouseY = -100;
-
-    // Smoothed ring state
-    let ringX = -100;
-    let ringY = -100;
-    let ringW = 28;
-    let ringH = 28;
-    let ringRadius = 9999;
-
-    let activeTarget: HTMLElement | null = null;
-    let rafId: number;
+    const coords = coordsRef.current;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
+      coords.mouseX = e.clientX;
+      coords.mouseY = e.clientY;
 
-      if (!isVisible) {
+      if (!coords.hasMoved) {
+        coords.hasMoved = true;
+        coords.ringX = e.clientX;
+        coords.ringY = e.clientY;
         setIsVisible(true);
-        ringX = mouseX;
-        ringY = mouseY;
       }
 
       // Check for interactive elements to magnetically encompass
       const target = e.target as HTMLElement | null;
       if (target) {
-        // Encompass buttons, links, navigation items, pills, and interactive badges
         const interactiveEl = target.closest<HTMLElement>(
           'a, button, [role="button"], input, select, textarea, [data-magnetic="true"], .interactive-target'
         );
 
         if (interactiveEl) {
-          activeTarget = interactiveEl;
+          coords.activeTarget = interactiveEl;
           setIsHovered(true);
         } else {
-          activeTarget = null;
+          coords.activeTarget = null;
           setIsHovered(false);
         }
       }
     };
 
-    const handleMouseDown = () => setIsMouseDown(true);
-    const handleMouseUp = () => setIsMouseDown(false);
-    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseDown = () => {
+      coords.isMouseDown = true;
+      setIsMouseDown(true);
+    };
+
+    const handleMouseUp = () => {
+      coords.isMouseDown = false;
+      setIsMouseDown(false);
+    };
+
+    const handleMouseEnter = () => {
+      setIsVisible(true);
+    };
+
     const handleMouseLeave = () => {
       setIsVisible(false);
-      activeTarget = null;
+      coords.activeTarget = null;
       setIsHovered(false);
     };
 
@@ -79,15 +91,22 @@ export const CustomCursor: React.FC = () => {
     document.addEventListener('mouseenter', handleMouseEnter);
     document.addEventListener('mouseleave', handleMouseLeave);
 
+    let rafId: number;
+
     const updateCursor = () => {
-      let targetX = mouseX;
-      let targetY = mouseY;
+      if (!coords.hasMoved) {
+        rafId = requestAnimationFrame(updateCursor);
+        return;
+      }
+
+      let targetX = coords.mouseX;
+      let targetY = coords.mouseY;
       let targetW = 28;
       let targetH = 28;
       let targetRadius = 9999;
 
-      if (activeTarget && activeTarget.isConnected) {
-        const rect = activeTarget.getBoundingClientRect();
+      if (coords.activeTarget && coords.activeTarget.isConnected) {
+        const rect = coords.activeTarget.getBoundingClientRect();
         // Check if element is visible and within reasonable bounding size for encompassing
         if (rect.width > 0 && rect.height > 0 && rect.width < 600 && rect.height < 250) {
           targetX = rect.left + rect.width / 2;
@@ -95,7 +114,7 @@ export const CustomCursor: React.FC = () => {
           targetW = rect.width + 12;
           targetH = rect.height + 8;
 
-          const computedStyle = window.getComputedStyle(activeTarget);
+          const computedStyle = window.getComputedStyle(coords.activeTarget);
           const computedRadius = parseFloat(computedStyle.borderRadius) || 0;
           if (computedRadius >= 16 || computedStyle.borderRadius.includes('9999')) {
             targetRadius = 9999;
@@ -105,36 +124,36 @@ export const CustomCursor: React.FC = () => {
             targetRadius = 8;
           }
         } else {
-          activeTarget = null;
+          coords.activeTarget = null;
           setIsHovered(false);
         }
       }
 
-      if (isMouseDown && !activeTarget) {
+      if (coords.isMouseDown && !coords.activeTarget) {
         targetW = 22;
         targetH = 22;
       }
 
       // Physics interpolation: snappier when encompassing, fluid spring when free-floating
-      const lerpFactor = prefersReducedMotion ? 1 : activeTarget ? 0.28 : 0.18;
+      const lerpFactor = prefersReducedMotion ? 1 : coords.activeTarget ? 0.28 : 0.18;
 
-      ringX += (targetX - ringX) * lerpFactor;
-      ringY += (targetY - ringY) * lerpFactor;
-      ringW += (targetW - ringW) * lerpFactor;
-      ringH += (targetH - ringH) * lerpFactor;
-      ringRadius += (targetRadius - ringRadius) * lerpFactor;
+      coords.ringX += (targetX - coords.ringX) * lerpFactor;
+      coords.ringY += (targetY - coords.ringY) * lerpFactor;
+      coords.ringW += (targetW - coords.ringW) * lerpFactor;
+      coords.ringH += (targetH - coords.ringH) * lerpFactor;
+      coords.ringRadius += (targetRadius - coords.ringRadius) * lerpFactor;
 
       // Update ring transform & bounding box
       if (ringRef.current) {
-        ringRef.current.style.transform = `translate3d(${ringX - ringW / 2}px, ${ringY - ringH / 2}px, 0)`;
-        ringRef.current.style.width = `${ringW}px`;
-        ringRef.current.style.height = `${ringH}px`;
-        ringRef.current.style.borderRadius = `${ringRadius}px`;
+        ringRef.current.style.transform = `translate3d(${coords.ringX - coords.ringW / 2}px, ${coords.ringY - coords.ringH / 2}px, 0)`;
+        ringRef.current.style.width = `${coords.ringW}px`;
+        ringRef.current.style.height = `${coords.ringH}px`;
+        ringRef.current.style.borderRadius = `${coords.ringRadius}px`;
       }
 
       // Micro-dot stays strictly locked to actual mouse coordinates
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+        dotRef.current.style.transform = `translate3d(${coords.mouseX}px, ${coords.mouseY}px, 0)`;
       }
 
       rafId = requestAnimationFrame(updateCursor);
@@ -150,7 +169,7 @@ export const CustomCursor: React.FC = () => {
       document.removeEventListener('mouseenter', handleMouseEnter);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [isVisible, isMouseDown]);
+  }, []); // Run only once on mount! Never reset on click or visibility change!
 
   if (isTouchDevice) {
     return null;

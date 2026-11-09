@@ -180,7 +180,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
-            // Interactive dynamic orbital vortex around cursor (with click gravity)
+            // Interactive dynamic orbital vortex around cursor center (with click gravity)
             const dx = p.x - mouse.x;
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
@@ -193,7 +193,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // On click: closer particles get pulled even closer to the dot
+              // On click: closer particles get pulled even closer to the dot center
               const orbitCompression = mouse.isMouseDown ? 0.45 : 1.0;
               const clampedOrbitDist = Math.max(minOrbitDist, dist * orbitCompression);
 
@@ -219,8 +219,8 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
           }
         }
 
-        // 1. Render subtle ambient particle-to-particle mesh edges (subtler default edges)
-        const maxMeshDist = width < 768 ? 65 : 80;
+        // 1. Particle-to-particle mesh edges: 1.5x forming radius, vibrant cyan/emerald styling matching cursor edges
+        const maxMeshDist = width < 768 ? 95 : 120; // 1.5x previous radius
         for (let i = 0; i < particles.length; i++) {
           const pi = particles[i];
           for (let j = i + 1; j < particles.length; j++) {
@@ -231,19 +231,23 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
             if (dist < maxMeshDist) {
               const proximity = (maxMeshDist - dist) / maxMeshDist;
-              const alpha = proximity * 0.12;
+              const alpha = Math.max(0.16, proximity * 0.65);
 
               renderCtx.beginPath();
               renderCtx.moveTo(pi.x, pi.y);
               renderCtx.lineTo(pj.x, pj.y);
-              renderCtx.strokeStyle = `rgba(148, 163, 184, ${alpha})`;
-              renderCtx.lineWidth = 0.55;
+
+              const isEmerald = pi.colorType === 'emerald' || pj.colorType === 'emerald';
+              renderCtx.strokeStyle = isEmerald
+                ? `rgba(16, 185, 129, ${alpha})`
+                : `rgba(6, 182, 212, ${alpha})`;
+              renderCtx.lineWidth = Math.max(0.85, proximity * 1.7);
               renderCtx.stroke();
             }
           }
         }
 
-        // 2. Render prominent cursor-to-particle connecting edges (visibly more prominent than default)
+        // 2. Cursor-to-particle connecting edges (emanating from exact center of cursor dot)
         if (mouse.active && mouse.x > 0 && mouse.y > 0) {
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
@@ -253,7 +257,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
             if (dist < currentRadius && dist > 0.1) {
               const proximity = (currentRadius - dist) / currentRadius; // 1 at center, 0 at boundary
-              const alpha = Math.max(0.18, proximity * (mouse.isMouseDown ? 0.85 : 0.65));
+              const alpha = Math.max(0.2, proximity * (mouse.isMouseDown ? 0.85 : 0.7));
 
               renderCtx.beginPath();
               renderCtx.moveTo(mouse.x, mouse.y);
@@ -262,7 +266,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
                 p.colorType === 'emerald'
                   ? `rgba(16, 185, 129, ${alpha})`
                   : `rgba(6, 182, 212, ${alpha})`;
-              renderCtx.lineWidth = Math.max(0.85, proximity * (mouse.isMouseDown ? 2.2 : 1.7));
+              renderCtx.lineWidth = Math.max(0.9, proximity * (mouse.isMouseDown ? 2.2 : 1.7));
               renderCtx.stroke();
             }
           }

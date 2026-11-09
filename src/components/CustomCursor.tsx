@@ -146,9 +146,9 @@ export const CustomCursor: React.FC = () => {
         ringRef.current.style.borderRadius = `${coords.ringRadius}px`;
       }
 
-      // Micro-dot stays strictly locked to actual mouse coordinates
+      // Micro-dot: strictly centered on mouse coordinates via translate(-50%, -50%)
       if (dotRef.current) {
-        dotRef.current.style.transform = `translate3d(${coords.mouseX}px, ${coords.mouseY}px, 0)`;
+        dotRef.current.style.transform = `translate3d(${coords.mouseX}px, ${coords.mouseY}px, 0) translate(-50%, -50%)`;
       }
 
       rafId = requestAnimationFrame(updateCursor);
@@ -177,10 +177,10 @@ export const CustomCursor: React.FC = () => {
       }`}
       aria-hidden="true"
     >
-      {/* Precision Distinguishable Cursor Dot (Enhanced size & clarity) */}
+      {/* Precision Distinguishable Cursor Dot (Dead-center geometric alignment) */}
       <div
         ref={dotRef}
-        className="fixed top-0 left-0 pointer-events-none will-change-transform -translate-x-1/2 -translate-y-1/2"
+        className="fixed top-0 left-0 pointer-events-none will-change-transform"
       >
         <div
           className={`w-2.5 h-2.5 rounded-full transition-transform duration-150 ring-2 ring-cyan-400/25 ${

@@ -70,7 +70,14 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     resize();
     window.addEventListener('resize', resize);
 
+    let stationaryTime = 0; // accumulated ms of stationary cursor
+
     const onMouseMove = (e: MouseEvent) => {
+      // If mouse moved noticeably, reset stationary timer
+      const moveDist = Math.hypot(e.clientX - mouse.targetX, e.clientY - mouse.targetY);
+      if (moveDist > 2) {
+        stationaryTime = 0;
+      }
       mouse.x = e.clientX;
       mouse.y = e.clientY;
       mouse.targetX = e.clientX;
@@ -131,17 +138,17 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         y: ry,
         originX: rx,
         originY: ry,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: (Math.random() - 0.5) * 0.35,
+        vx: (Math.random() - 0.5) * 0.12,
+        vy: (Math.random() - 0.5) * 0.12,
         radius: baseR,
         baseRadius: baseR,
         alpha: baseA,
         baseAlpha: baseA,
         colorType,
         phase: Math.random() * Math.PI * 2,
-        pulseSpeed: 0.015 + Math.random() * 0.02,
-        orbitRadius: Math.random() * 25 + 10,
-        orbitSpeed: (Math.random() - 0.5) * 0.012,
+        pulseSpeed: 0.008 + Math.random() * 0.012,
+        orbitRadius: Math.random() * 20 + 8,
+        orbitSpeed: (Math.random() - 0.5) * 0.004,
         orbitAngle: Math.random() * Math.PI * 2,
         connectedAt: -1,
         // Individualized release duration between 0.3s (300ms) and 0.5s (500ms)
@@ -196,10 +203,21 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
         renderCtx.clearRect(0, 0, width, height);
 
-        // General pull radius slightly increased to 100px; click radius is exactly 0.7 of general radius (70px)
+        // General pull radius: 100px; click radius is 0.7x (70px)
         const generalRadius = 100;
         const clickRadius = generalRadius * 0.7; // 70px
-        const currentRadius = generalRadius - easedProgress * (generalRadius - clickRadius); // 100px -> 70px
+        const innerRadius = generalRadius - easedProgress * (generalRadius - clickRadius); // 100px -> 70px
+
+        // While cursor is active and stationary, expand effective pull boundary from 1x (100px) to 2x (200px) over 10 seconds
+        if (mouse.active) {
+          stationaryTime = Math.min(10000, stationaryTime + deltaMs);
+        } else {
+          stationaryTime = 0;
+        }
+
+        const stationaryProgress = stationaryTime / 10000; // 0.0 to 1.0 over 10s
+        // Maximum gravity cutoff: strictly 0 gravity beyond outerGravityRadius (which expands up to 2x generalRadius)
+        const outerGravityRadius = generalRadius * (1.0 + stationaryProgress); // 100px -> 200px
 
         const pullSpeed = 0.16 + easedProgress * 0.04;
         const speedMult = 1.0 + easedProgress * 0.15;
@@ -232,13 +250,22 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
+            // Gravity only affects particles within outerGravityRadius (strictly 0 outside)
+            const isInGravityRange = dist <= outerGravityRadius && dist > 0.1 && mouse.active;
             const isHeldOrReleasing = mouse.isMouseDown || p.releaseProgress > 0;
 
-            if (dist < currentRadius && dist > 0.1 && mouse.active && isHeldOrReleasing) {
-              const force = (currentRadius - dist) / currentRadius; // 0 to 1
+            if (isInGravityRange && (dist <= innerRadius || isHeldOrReleasing || stationaryProgress > 0)) {
+              // Calculate gradient force: 1.0 inside innerRadius, smoothly tapering to 0.0 at outerGravityRadius
+              let gravityStrength = 1.0;
+              if (dist > innerRadius) {
+                // Smooth cosine / linear gradient between innerRadius and outerGravityRadius
+                const t = (outerGravityRadius - dist) / Math.max(1, outerGravityRadius - innerRadius);
+                gravityStrength = Math.max(0, Math.min(1, t));
+              }
+
               const currentAngle = Math.atan2(dy, dx);
               const orbitDir = i % 2 === 0 ? 1 : -1;
-              const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult;
+              const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult * gravityStrength;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
               // Individual smooth blend: when releasing, smoothly expands back from compressed orbit into free space
@@ -250,17 +277,20 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
               const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
 
-              // Graceful, smooth attraction pull speed, smoothly relaxing back as releaseProgress reaches 0
-              const currentPull = pullSpeed * (mouse.isMouseDown ? 1.0 : effectiveTension);
-              p.x += (orbitalTargetX - p.x) * currentPull;
-              p.y += (orbitalTargetY - p.y) * currentPull;
+              // Graceful, smooth attraction pull speed weighted by gravity gradient
+              const effectivePull = pullSpeed * gravityStrength * (mouse.isMouseDown ? 1.0 : (p.releaseProgress > 0 ? effectiveTension : 0.7));
+              
+              // Blend towards orbital target according to gravity strength, rest follows natural path
+              p.x += (orbitalTargetX - p.x) * effectivePull + (targetX - p.x) * (1 - gravityStrength) * 0.02;
+              p.y += (orbitalTargetY - p.y) * effectivePull + (targetY - p.y) * (1 - gravityStrength) * 0.02;
 
+              const force = Math.max(0, (innerRadius - dist) / innerRadius);
               p.radius = p.baseRadius * (1 + force * (0.3 + effectiveTension * 0.15));
               p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + effectiveTension * 0.15));
             } else {
-              // Smoothly and gracefully relaxes back to wandering free space orbit
-              p.x += (targetX - p.x) * 0.055;
-              p.y += (targetY - p.y) * 0.055;
+              // Strictly 0 gravity beyond outer boundary: smoothly and gracefully relaxes to wandering free space orbit
+              p.x += (targetX - p.x) * 0.04;
+              p.y += (targetY - p.y) * 0.04;
               p.radius += (p.baseRadius - p.radius) * 0.06;
               p.alpha += (p.baseAlpha - p.alpha) * 0.06;
             }
@@ -298,6 +328,8 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         }
 
         // 2. Cursor-to-particle connecting edges (emanating from exact center of cursor dot with 0.7s temporary formation prominence)
+        // Edge connection distance expands gracefully alongside the stationary gravity field
+        const connectionRadius = outerGravityRadius;
         if (mouse.active && mouse.x > 0 && mouse.y > 0) {
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
@@ -305,7 +337,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            if (dist < currentRadius && dist > 0.1) {
+            if (dist < connectionRadius && dist > 0.1) {
               if (p.connectedAt <= 0) {
                 p.connectedAt = now;
               }
@@ -316,10 +348,10 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               const sparkProgress = Math.max(0, Math.min(1, 1 - ageMs / 700));
               const spark = sparkProgress * sparkProgress * (3 - 2 * sparkProgress);
 
-              const proximity = (currentRadius - dist) / currentRadius; // 1 at center, 0 at boundary
+              const proximity = (connectionRadius - dist) / connectionRadius; // 1 at center, 0 at boundary
 
               // Temporarily increased brightness for 0.7s
-              const baseAlpha = Math.max(0.2, proximity * (0.65 + easedProgress * 0.15));
+              const baseAlpha = Math.max(0.18, proximity * (0.65 + easedProgress * 0.15));
               const alpha = Math.min(1.0, baseAlpha + spark * 0.35);
 
               // Temporarily increased thickness for 0.7s

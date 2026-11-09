@@ -18,10 +18,10 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <a href="#" className="flex items-center gap-2 text-slate-100 hover:text-emerald-400 transition-colors">
-            <Terminal className="text-emerald-400" size={20} />
+          <a href="#" className="flex items-center gap-2 text-slate-100 hover:text-cyan-400 transition-colors">
+            <Terminal className="text-cyan-400" size={20} />
             <span className="font-mono font-semibold tracking-tight text-sm sm:text-base">
-              syed-usama<span className="text-emerald-400">.dev</span>
+              syed-usama<span className="text-cyan-400">.dev</span>
             </span>
           </a>
 
@@ -30,7 +30,7 @@ export const Navbar: React.FC = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className="text-sm text-slate-300 hover:text-white transition-colors"
+                className="text-sm text-slate-300 hover:text-cyan-300 transition-colors"
               >
                 {link.label}
               </a>
@@ -39,9 +39,9 @@ export const Navbar: React.FC = () => {
               href={portfolioData.personal.resumePdfPath}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-slate-700 bg-slate-900/80 text-xs font-medium text-slate-200 hover:border-slate-500 hover:text-white transition-all shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-700 bg-slate-900/90 text-xs font-mono font-medium text-slate-200 hover:border-cyan-500/50 hover:text-white transition-all shadow-sm"
             >
-              <FileDown size={14} className="text-emerald-400" />
+              <FileDown size={14} className="text-cyan-400" />
               <span>Resume PDF</span>
             </a>
           </nav>

@@ -1,11 +1,18 @@
-import React from 'react';
-import { Building2, MapPin, CheckCircle2, ShieldCheck, Github, Linkedin, Mail, ArrowUpRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Building2, MapPin, CheckCircle2, ShieldCheck, Github, Linkedin, Mail, ArrowUpRight, Copy, Check } from 'lucide-react';
 import { portfolioData } from '../data/portfolioData';
 import { TypewriterHeadline } from './TypewriterHeadline';
 import mePhoto from '../assets/me.png';
 
 export const Hero: React.FC = () => {
   const { personal } = portfolioData;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText(personal.email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <section className="relative z-10 pt-16 pb-20 md:pt-24 md:pb-28 overflow-hidden">
@@ -82,14 +89,33 @@ export const Hero: React.FC = () => {
                 <span className="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Soon</span>
               </button>
 
-              <a
-                href="mailto:usama1k999@gmail.com"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-slate-800 bg-slate-900/80 text-slate-200 text-sm font-medium hover:border-slate-600 hover:text-white hover:-translate-y-0.5 transition-all duration-200 shadow-sm"
-                aria-label="Send Email"
-              >
-                <Mail size={16} />
-                <span>Email</span>
-              </a>
+              <div className="inline-flex items-center rounded-lg border border-slate-800 bg-slate-900/80 text-slate-200 text-sm font-medium shadow-sm hover:border-slate-700 transition-all duration-200">
+                <a
+                  href={`mailto:${personal.email}`}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-slate-200 hover:text-white transition-colors"
+                  aria-label="Send Email"
+                >
+                  <Mail size={16} className="text-cyan-400" />
+                  <span className="text-slate-400">Email:</span>
+                  <span className="font-mono text-xs sm:text-sm text-slate-200 hover:text-cyan-300 transition-colors">
+                    {personal.email}
+                  </span>
+                </a>
+                <div className="h-4 w-px bg-slate-800" />
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  className="p-2.5 text-slate-400 hover:text-cyan-300 transition-colors focus:outline-none"
+                  title={copied ? "Copied!" : "Copy email address"}
+                  aria-label="Copy email address"
+                >
+                  {copied ? (
+                    <Check size={14} className="text-emerald-400" />
+                  ) : (
+                    <Copy size={14} />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 

@@ -20,8 +20,8 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           <a href="#" className="flex items-center gap-2 text-slate-100 hover:text-cyan-400 transition-colors">
             <Terminal className="text-cyan-400" size={20} />
-            <span className="font-mono font-semibold tracking-tight text-sm sm:text-base">
-              syed-usama<span className="text-cyan-400">.dev</span>
+            <span className="font-semibold tracking-tight text-sm sm:text-base text-white">
+              Syed Usama
             </span>
           </a>
 

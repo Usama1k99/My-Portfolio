@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ParticleMeshCanvas from './components/ParticleMeshCanvas';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -20,11 +20,20 @@ import {
   Calendar,
   CheckCircle2,
   Terminal,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  Check
 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { experience, certifications, education, skills, personal } = portfolioData;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText(personal.email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const getSkillCategoryTheme = (idx: number) => {
     switch (idx) {
@@ -335,13 +344,26 @@ export const App: React.FC = () => {
               </p>
 
               <div className="flex flex-wrap items-center justify-center gap-4">
-                <a
-                  href={`mailto:${personal.email}`}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-400 hover:to-emerald-500 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-cyan-950/40 hover:shadow-cyan-950/70 hover:-translate-y-0.5"
-                >
-                  <Mail size={16} />
-                  <span>{personal.email}</span>
-                </a>
+                <div className="inline-flex items-center rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-600 shadow-md shadow-cyan-950/40 hover:shadow-cyan-950/70 transition-all duration-200">
+                  <a
+                    href={`mailto:${personal.email}`}
+                    className="inline-flex items-center gap-2 px-4 py-3 text-white font-medium text-sm hover:text-cyan-100 transition-colors"
+                    aria-label="Send Email"
+                  >
+                    <Mail size={16} />
+                    <span>{personal.email}</span>
+                  </a>
+                  <div className="h-5 w-px bg-white/25" />
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    className="p-3 text-white/90 hover:text-white transition-colors focus:outline-none"
+                    title={copied ? "Copied!" : "Copy email address"}
+                    aria-label="Copy email address"
+                  >
+                    {copied ? <Check size={16} className="text-white" /> : <Copy size={16} />}
+                  </button>
+                </div>
 
                 <a
                   href="https://github.com/Usama1k99"

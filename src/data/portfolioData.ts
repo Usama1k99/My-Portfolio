@@ -10,7 +10,7 @@ export const portfolioData: PortfolioData = {
     githubUsername: "Usama1k99",
     experienceYears: "1 Year",
     status: "ServiceNow Developer at Cynosure Technologies",
-    resumePdfPath: "/Syed_Usama_CV_new.pdf",
+    resumePdfPath: "/Syed_Usama_CV.pdf",
   },
 
   experience: [

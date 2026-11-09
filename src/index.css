@@ -53,6 +53,52 @@
   transform: translateY(-3px);
 }
 
+/* Card Hover visual effects synced across both mouse moves and page scrolling */
+.card-is-hovered.card-blur-1px {
+  background-color: rgb(15 23 42 / 0.95);
+  box-shadow: 0 25px 50px -12px rgb(2 6 23 / 0.8);
+}
+
+.card-is-hovered.hover\:border-sky-500\/40 {
+  border-color: rgb(14 165 233 / 0.4);
+}
+.card-is-hovered.hover\:border-emerald-500\/40 {
+  border-color: rgb(16 185 129 / 0.4);
+}
+.card-is-hovered.hover\:border-teal-500\/40 {
+  border-color: rgb(20 184 166 / 0.4);
+}
+.card-is-hovered.hover\:border-slate-700\/80 {
+  border-color: rgb(51 65 85 / 0.8);
+}
+
+.card-is-hovered .group-hover\:via-cyan-400\/70,
+.card-is-hovered .group-hover\:via-cyan-400\/60 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(34 211 238 / 0.7) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.card-is-hovered .group-hover\:via-emerald-400\/70,
+.card-is-hovered .group-hover\:via-emerald-400\/60 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(52 211 153 / 0.7) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.card-is-hovered .group-hover\:via-sky-400\/70,
+.card-is-hovered .group-hover\:via-sky-400\/60 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(56 189 248 / 0.7) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+.card-is-hovered .group-hover\:via-teal-400\/70,
+.card-is-hovered .group-hover\:via-teal-400\/60 {
+  --tw-gradient-stops: var(--tw-gradient-from), rgb(45 212 191 / 0.7) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+
+.card-is-hovered .group-hover\:text-cyan-300 {
+  color: rgb(103 232 249);
+}
+.card-is-hovered .group-hover\:text-emerald-300 {
+  color: rgb(110 231 183);
+}
+.card-is-hovered .group-hover\:text-sky-300 {
+  color: rgb(125 211 252);
+}
+
 /* 1px Frosted Glass Blur for Cards */
 .card-blur-1px {
   backdrop-filter: blur(1px);

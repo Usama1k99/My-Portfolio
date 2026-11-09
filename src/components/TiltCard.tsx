@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 
 interface TiltCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
@@ -27,13 +27,13 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     isHovered: false,
   });
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const updateTilt = useCallback((clientX: number, clientY: number) => {
     const card = cardRef.current;
     if (!card) return;
 
     const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
@@ -50,6 +50,10 @@ export const TiltCard: React.FC<TiltCardProps> = ({
       glareY,
       isHovered: true,
     });
+  }, [maxTilt]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    updateTilt(e.clientX, e.clientY);
   };
 
   const handleMouseLeave = () => {
@@ -60,12 +64,43 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     }));
   };
 
+  // Re-evaluate and maintain hover/tilt state while page is being scrolled under stationary cursor
+  useEffect(() => {
+    const handleScroll = () => {
+      const card = cardRef.current;
+      if (!card) return;
+
+      const mousePos = (window as unknown as { __cursorPos?: { x: number; y: number; hasMoved: boolean } }).__cursorPos;
+      if (!mousePos || !mousePos.hasMoved) return;
+
+      const rect = card.getBoundingClientRect();
+      const isInside =
+        mousePos.x >= rect.left &&
+        mousePos.x <= rect.right &&
+        mousePos.y >= rect.top &&
+        mousePos.y <= rect.bottom;
+
+      if (isInside) {
+        updateTilt(mousePos.x, mousePos.y);
+      } else if (style.isHovered) {
+        setStyle((prev) => ({
+          ...prev,
+          transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+          isHovered: false,
+        }));
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [style.isHovered, updateTilt]);
+
   return (
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`relative will-change-transform ${className}`}
+      className={`relative will-change-transform ${style.isHovered ? 'card-is-hovered' : ''} ${className}`}
       style={{
         transform: style.transform,
         transition: style.isHovered ? 'transform 0.12s ease-out' : 'transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)',

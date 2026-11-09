@@ -40,6 +40,12 @@ export const CustomCursor: React.FC = () => {
     const handleMouseMove = (e: MouseEvent) => {
       coords.mouseX = e.clientX;
       coords.mouseY = e.clientY;
+      // Expose cursor position globally for scroll-based hover evaluation across components
+      (window as unknown as { __cursorPos?: { x: number; y: number; hasMoved: boolean } }).__cursorPos = {
+        x: e.clientX,
+        y: e.clientY,
+        hasMoved: true,
+      };
 
       if (!coords.hasMoved) {
         coords.hasMoved = true;
@@ -65,6 +71,58 @@ export const CustomCursor: React.FC = () => {
       }
     };
 
+    // Re-evaluate hover under stationary cursor when page is scrolled
+    const checkHoverUnderCursor = (x: number, y: number) => {
+      if (x < 0 || y < 0 || x > window.innerWidth || y > window.innerHeight) return;
+      const el = document.elementFromPoint(x, y) as HTMLElement | null;
+      if (el) {
+        const interactiveEl = el.closest<HTMLElement>(
+          'a, button, [role="button"], input, select, textarea, [data-magnetic="true"], .interactive-target'
+        );
+
+        if (interactiveEl) {
+          coords.activeTarget = interactiveEl;
+          setIsHovered(true);
+        } else {
+          coords.activeTarget = null;
+          setIsHovered(false);
+        }
+
+        // Dispatch synthetic pointermove and mousemove so underlying interactive elements trigger their hover
+        el.dispatchEvent(
+          new PointerEvent('pointermove', {
+            clientX: x,
+            clientY: y,
+            bubbles: true,
+            cancelable: true,
+            view: window,
+          })
+        );
+        el.dispatchEvent(
+          new MouseEvent('mousemove', {
+            clientX: x,
+            clientY: y,
+            bubbles: true,
+            cancelable: true,
+            view: window,
+          })
+        );
+      } else {
+        coords.activeTarget = null;
+        setIsHovered(false);
+      }
+    };
+
+    let scrollRafId = 0;
+    const handleScroll = () => {
+      if (!coords.hasMoved) return;
+      if (scrollRafId) return;
+      scrollRafId = requestAnimationFrame(() => {
+        scrollRafId = 0;
+        checkHoverUnderCursor(coords.mouseX, coords.mouseY);
+      });
+    };
+
     const handleMouseDown = () => {
       coords.isMouseDown = true;
       setIsMouseDown(true);
@@ -86,6 +144,7 @@ export const CustomCursor: React.FC = () => {
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mouseenter', handleMouseEnter);
@@ -109,19 +168,31 @@ export const CustomCursor: React.FC = () => {
         const rect = coords.activeTarget.getBoundingClientRect();
         // Check if element is visible and within reasonable bounding size for encompassing
         if (rect.width > 0 && rect.height > 0 && rect.width < 600 && rect.height < 250) {
-          targetX = rect.left + rect.width / 2;
-          targetY = rect.top + rect.height / 2;
-          targetW = rect.width + 12;
-          targetH = rect.height + 8;
+          // Verify that cursor is still near the target (hasn't scrolled away)
+          const isStillNear =
+            coords.mouseX >= rect.left - 20 &&
+            coords.mouseX <= rect.right + 20 &&
+            coords.mouseY >= rect.top - 20 &&
+            coords.mouseY <= rect.bottom + 20;
 
-          const computedStyle = window.getComputedStyle(coords.activeTarget);
-          const computedRadius = parseFloat(computedStyle.borderRadius) || 0;
-          if (computedRadius >= 16 || computedStyle.borderRadius.includes('9999')) {
-            targetRadius = 9999;
-          } else if (computedRadius > 0) {
-            targetRadius = computedRadius + 4;
+          if (isStillNear) {
+            targetX = rect.left + rect.width / 2;
+            targetY = rect.top + rect.height / 2;
+            targetW = rect.width + 12;
+            targetH = rect.height + 8;
+
+            const computedStyle = window.getComputedStyle(coords.activeTarget);
+            const computedRadius = parseFloat(computedStyle.borderRadius) || 0;
+            if (computedRadius >= 16 || computedStyle.borderRadius.includes('9999')) {
+              targetRadius = 9999;
+            } else if (computedRadius > 0) {
+              targetRadius = computedRadius + 4;
+            } else {
+              targetRadius = 8;
+            }
           } else {
-            targetRadius = 8;
+            coords.activeTarget = null;
+            setIsHovered(false);
           }
         } else {
           coords.activeTarget = null;
@@ -158,7 +229,9 @@ export const CustomCursor: React.FC = () => {
 
     return () => {
       cancelAnimationFrame(rafId);
+      if (scrollRafId) cancelAnimationFrame(scrollRafId);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mouseenter', handleMouseEnter);

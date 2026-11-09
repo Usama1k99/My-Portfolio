@@ -50,7 +50,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       y: -9999,
       targetX: -9999,
       targetY: -9999,
-      radius: 80,
+      radius: 85,
       active: false,
       isMouseDown: false,
     };
@@ -149,8 +149,27 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       }
     };
 
+    // Time-based smooth progress tracking for 1.0s pull and 0.7s release
+    let lastTime = performance.now();
+    let clickProgress = 0.0;
+
     const render = () => {
       if (isTabVisible) {
+        const now = performance.now();
+        const deltaMs = Math.min(50, Math.max(1, now - lastTime));
+        lastTime = now;
+
+        if (mouse.isMouseDown) {
+          // Slowly pull together over exactly 1.0 second (1000ms)
+          clickProgress = Math.min(1.0, clickProgress + deltaMs / 1000);
+        } else {
+          // Gently release back over exactly 0.7 seconds (700ms)
+          clickProgress = Math.max(0.0, clickProgress - deltaMs / 700);
+        }
+
+        // Smooth cubic easing (smoothstep: 3x^2 - 2x^3) for organic deceleration
+        const easedProgress = clickProgress * clickProgress * (3 - 2 * clickProgress);
+
         if (!mouse.active) {
           mouse.x = -9999;
           mouse.y = -9999;
@@ -158,9 +177,13 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
         renderCtx.clearRect(0, 0, width, height);
 
-        // Dynamic gravity parameters
-        const currentRadius = mouse.isMouseDown ? 150 : 80;
-        const minOrbitDist = mouse.isMouseDown ? 6 : 18;
+        // Gentle, subtle parameters: radius slightly expands from 85px to 100px (+15px)
+        const currentRadius = 85 + easedProgress * 15;
+        // Orbit compresses gently by ~25% (18px down to 13px)
+        const minOrbitDist = 18 - easedProgress * 5;
+        const orbitCompression = 1.0 - easedProgress * 0.25;
+        const pullSpeed = 0.18 + easedProgress * 0.04;
+        const speedMult = 1.0 + easedProgress * 0.2;
 
         // Update particles physics and orbital vortex
         for (let i = 0; i < particles.length; i++) {
@@ -180,7 +203,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
-            // Interactive dynamic orbital vortex around cursor center (with click gravity)
+            // Interactive dynamic orbital vortex around cursor center (with smooth click gravity)
             const dx = p.x - mouse.x;
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
@@ -189,24 +212,21 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               const force = (currentRadius - dist) / currentRadius; // 0 to 1
               const currentAngle = Math.atan2(dy, dx);
               const orbitDir = i % 2 === 0 ? 1 : -1;
-              const speedMult = mouse.isMouseDown ? 1.6 : 1.0;
               const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // On click: closer particles get pulled even closer to the dot center
-              const orbitCompression = mouse.isMouseDown ? 0.45 : 1.0;
+              // On click: slightly pull closer to the dot center
               const clampedOrbitDist = Math.max(minOrbitDist, dist * orbitCompression);
 
               const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
               const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
 
-              // Faster attraction pull speed on click
-              const pullSpeed = mouse.isMouseDown ? 0.38 : 0.22;
+              // Graceful, smooth attraction pull speed
               p.x += (orbitalTargetX - p.x) * pullSpeed;
               p.y += (orbitalTargetY - p.y) * pullSpeed;
 
-              p.radius = p.baseRadius * (1 + force * (mouse.isMouseDown ? 0.5 : 0.3));
-              p.alpha = Math.min(0.9, p.baseAlpha + force * (mouse.isMouseDown ? 0.45 : 0.3));
+              p.radius = p.baseRadius * (1 + force * (0.3 + easedProgress * 0.15));
+              p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + easedProgress * 0.15));
             } else {
               // Gentle spring relaxation back to natural wandering orbit
               p.x += (targetX - p.x) * 0.045;
@@ -257,7 +277,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
             if (dist < currentRadius && dist > 0.1) {
               const proximity = (currentRadius - dist) / currentRadius; // 1 at center, 0 at boundary
-              const alpha = Math.max(0.2, proximity * (mouse.isMouseDown ? 0.85 : 0.7));
+              const alpha = Math.max(0.2, proximity * (0.65 + easedProgress * 0.15));
 
               renderCtx.beginPath();
               renderCtx.moveTo(mouse.x, mouse.y);
@@ -266,7 +286,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
                 p.colorType === 'emerald'
                   ? `rgba(16, 185, 129, ${alpha})`
                   : `rgba(6, 182, 212, ${alpha})`;
-              renderCtx.lineWidth = Math.max(0.9, proximity * (mouse.isMouseDown ? 2.2 : 1.7));
+              renderCtx.lineWidth = Math.max(0.9, proximity * (1.7 + easedProgress * 0.4));
               renderCtx.stroke();
             }
           }

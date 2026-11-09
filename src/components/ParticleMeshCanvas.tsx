@@ -22,6 +22,7 @@ interface Particle {
   orbitRadius: number;
   orbitSpeed: number;
   orbitAngle: number;
+  connectedAt: number;
 }
 
 export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
@@ -128,6 +129,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         orbitRadius: Math.random() * 25 + 10,
         orbitSpeed: (Math.random() - 0.5) * 0.012,
         orbitAngle: Math.random() * Math.PI * 2,
+        connectedAt: -1,
       };
     });
 
@@ -270,7 +272,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
           }
         }
 
-        // 2. Cursor-to-particle connecting edges (emanating from exact center of cursor dot)
+        // 2. Cursor-to-particle connecting edges (emanating from exact center of cursor dot with 0.7s temporary formation prominence)
         if (mouse.active && mouse.x > 0 && mouse.y > 0) {
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
@@ -279,8 +281,25 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const dist = Math.hypot(dx, dy);
 
             if (dist < currentRadius && dist > 0.1) {
+              if (p.connectedAt <= 0) {
+                p.connectedAt = now;
+              }
+
+              // Age of connection in milliseconds
+              const ageMs = now - p.connectedAt;
+              // Temporary prominent burst over ~0.7 seconds (700ms)
+              const sparkProgress = Math.max(0, Math.min(1, 1 - ageMs / 700));
+              const spark = sparkProgress * sparkProgress * (3 - 2 * sparkProgress);
+
               const proximity = (currentRadius - dist) / currentRadius; // 1 at center, 0 at boundary
-              const alpha = Math.max(0.2, proximity * (0.65 + easedProgress * 0.15));
+
+              // Temporarily increased brightness for 0.7s
+              const baseAlpha = Math.max(0.2, proximity * (0.65 + easedProgress * 0.15));
+              const alpha = Math.min(1.0, baseAlpha + spark * 0.35);
+
+              // Temporarily increased thickness for 0.7s
+              const baseLineWidth = Math.max(0.9, proximity * (1.7 + easedProgress * 0.4));
+              const lineWidth = baseLineWidth + spark * 1.6;
 
               renderCtx.beginPath();
               renderCtx.moveTo(mouse.x, mouse.y);
@@ -289,9 +308,15 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
                 p.colorType === 'emerald'
                   ? `rgba(16, 185, 129, ${alpha})`
                   : `rgba(6, 182, 212, ${alpha})`;
-              renderCtx.lineWidth = Math.max(0.9, proximity * (1.7 + easedProgress * 0.4));
+              renderCtx.lineWidth = lineWidth;
               renderCtx.stroke();
+            } else {
+              p.connectedAt = -1;
             }
+          }
+        } else {
+          for (let i = 0; i < particles.length; i++) {
+            particles[i].connectedAt = -1;
           }
         }
 

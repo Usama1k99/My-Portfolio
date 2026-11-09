@@ -93,14 +93,14 @@ export const Hero: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-shrink-0 relative">
-            <div className="relative w-48 h-48 sm:w-60 sm:h-60 lg:w-72 lg:h-72 rounded-2xl overflow-hidden border border-slate-700/80 hover:border-cyan-500/40 transition-all duration-300 bg-slate-900 shadow-xl shadow-slate-950/60 group">
+          <div className="flex-shrink-0 relative z-20">
+            <div className="relative z-20 w-48 h-48 sm:w-60 sm:h-60 lg:w-72 lg:h-72 rounded-2xl overflow-hidden border border-slate-700/80 hover:border-cyan-500/40 transition-all duration-300 bg-slate-900 shadow-2xl shadow-slate-950/80 group">
               <img
                 src={mePhoto}
                 alt="Syed Usama"
-                className="w-full h-full object-cover object-center filter grayscale contrast-110 group-hover:grayscale-0 transition-all duration-300"
+                className="relative z-20 w-full h-full object-cover object-center filter grayscale contrast-110 group-hover:grayscale-0 transition-all duration-300"
               />
-              <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none"></div>
+              <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none z-30"></div>
             </div>
           </div>
         </div>

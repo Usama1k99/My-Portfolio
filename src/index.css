@@ -53,6 +53,12 @@
   transform: translateY(-3px);
 }
 
+/* 5px Frosted Glass Blur for Cards */
+.card-blur-5px {
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
 /* Hide default cursor on fine-pointer devices (desktop) in favor of the custom kinetic cursor */
 @media (pointer: fine) {
   body,

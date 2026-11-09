@@ -50,7 +50,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       y: -9999,
       targetX: -9999,
       targetY: -9999,
-      radius: 85,
+      radius: 100,
       active: false,
       isMouseDown: false,
     };
@@ -177,13 +177,16 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
         renderCtx.clearRect(0, 0, width, height);
 
-        // Gentle, subtle parameters: radius slightly expands from 85px to 100px (+15px)
-        const currentRadius = 85 + easedProgress * 15;
-        // Orbit compresses gently by ~25% (18px down to 13px)
-        const minOrbitDist = 18 - easedProgress * 5;
-        const orbitCompression = 1.0 - easedProgress * 0.25;
-        const pullSpeed = 0.18 + easedProgress * 0.04;
-        const speedMult = 1.0 + easedProgress * 0.2;
+        // General pull radius slightly increased to 100px; click radius is exactly 0.7 of general radius (70px)
+        const generalRadius = 100;
+        const clickRadius = generalRadius * 0.7; // 70px
+        const currentRadius = generalRadius - easedProgress * (generalRadius - clickRadius); // 100px -> 70px
+
+        // Particles orbit comfortably away from center (min orbit 32px resting, 24px clicked - never pulling too close)
+        const minOrbitDist = 32 - easedProgress * 8;
+        const orbitCompression = 1.0 - easedProgress * 0.2;
+        const pullSpeed = 0.16 + easedProgress * 0.04;
+        const speedMult = 1.0 + easedProgress * 0.15;
 
         // Update particles physics and orbital vortex
         for (let i = 0; i < particles.length; i++) {
@@ -326,7 +329,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[30]"
+      className="fixed inset-0 pointer-events-none z-0"
       aria-hidden="true"
     />
   );

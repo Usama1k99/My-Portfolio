@@ -12,6 +12,8 @@ interface Particle {
   originY: number;
   vx: number;
   vy: number;
+  disperseVx: number;
+  disperseVy: number;
   radius: number;
   baseRadius: number;
   alpha: number;
@@ -71,6 +73,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     window.addEventListener('resize', resize);
 
     let stationaryTime = 0; // accumulated ms of stationary cursor
+    let gravityCooldownUntil = 0; // timestamp until which cursor gravity is strictly 0 (0.6s on click release)
 
     const onMouseMove = (e: MouseEvent) => {
       // If mouse moved noticeably, reset stationary timer
@@ -87,20 +90,35 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
     const onMouseDown = () => {
       mouse.isMouseDown = true;
+      gravityCooldownUntil = 0;
     };
 
     const onMouseUp = () => {
       mouse.isMouseDown = false;
-      // Trigger individual organic release timings (0.3s to 0.5s) for particles
+      const now = performance.now();
+      // On click release: for 0.6s (600ms) the cursor's gravity is strictly 0
+      gravityCooldownUntil = now + 600;
+      stationaryTime = 0;
+
+      // The closest particles disperse with more speed within 0.3s to 0.5s range, sent far away from cursor
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
         const dist = Math.hypot(dx, dy);
+
         if (dist < 140) {
-          // Reset progress and randomize release duration between 300ms (0.3s) and 500ms (0.5s)
+          // Individualized release duration between 300ms (0.3s) and 500ms (0.5s)
           p.releaseDuration = 300 + Math.random() * 200;
-          p.releaseProgress = 1.0; // Start at full tension, decays to 0 over 0.3s - 0.5s
+          p.releaseProgress = 1.0;
+
+          // Outward angle pointing away from cursor center
+          const angle = dist > 0.01 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+          const proximity = Math.max(0.4, (140 - dist) / 140);
+          // High dispersion speed: propels particles far away from cursor into free space
+          const disperseSpeed = (6.0 + Math.random() * 4.0) * proximity;
+          p.disperseVx = Math.cos(angle) * disperseSpeed;
+          p.disperseVy = Math.sin(angle) * disperseSpeed;
         }
       }
     };
@@ -141,6 +159,8 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         originY: ry,
         vx: (Math.random() - 0.5) * 0.35,
         vy: (Math.random() - 0.5) * 0.35,
+        disperseVx: 0,
+        disperseVy: 0,
         radius: baseR,
         baseRadius: baseR,
         alpha: baseA,
@@ -186,12 +206,15 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         const deltaMs = Math.min(50, Math.max(1, now - lastTime));
         lastTime = now;
 
+        // In this duration (for 0.6s) the cursor's gravity is strictly 0
+        const isGravitySuppressed = now < gravityCooldownUntil;
+
         if (mouse.isMouseDown) {
           // Slowly pull together over exactly 1.0 second (1000ms)
           clickProgress = Math.min(1.0, clickProgress + deltaMs / 1000);
         } else {
-          // Progress decays as particles release into free space
-          clickProgress = Math.max(0.0, clickProgress - deltaMs / 400);
+          // Fast tension release
+          clickProgress = Math.max(0.0, clickProgress - deltaMs / 250);
         }
 
         // Smooth cubic easing (smoothstep: 3x^2 - 2x^3) for organic deceleration
@@ -209,16 +232,16 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         const clickRadius = generalRadius * 0.7; // 70px
         const innerRadius = generalRadius - easedProgress * (generalRadius - clickRadius); // 100px -> 70px
 
-        // While cursor is active and stationary, expand effective pull boundary from 1x (100px) to 2x (200px) over 10 seconds
-        if (mouse.active) {
+        // While cursor is active, not suppressed, and not clicked, expand effective pull boundary from 1x to 2x over 10s
+        if (mouse.active && !isGravitySuppressed && !mouse.isMouseDown) {
           stationaryTime = Math.min(10000, stationaryTime + deltaMs);
         } else {
           stationaryTime = 0;
         }
 
         const stationaryProgress = stationaryTime / 10000; // 0.0 to 1.0 over 10s
-        // Maximum gravity cutoff: strictly 0 gravity beyond outerGravityRadius (expands up to 2x generalRadius)
-        const outerGravityRadius = generalRadius * (1.0 + stationaryProgress); // 100px -> 200px
+        // Maximum gravity cutoff: strictly 0 gravity during 0.6s suppression or beyond outerGravityRadius
+        const outerGravityRadius = isGravitySuppressed ? 0 : generalRadius * (1.0 + stationaryProgress); // 100px -> 200px
 
         const pullSpeed = 0.16 + easedProgress * 0.04;
         const speedMult = 1.0 + easedProgress * 0.15;
@@ -266,29 +289,29 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               p.y -= height + 80;
             }
 
-            const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
-            const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
-
-            // Regular speed for this particle (linear drift + orbit harmonic)
-            const regularSpeed = Math.hypot(p.vx, p.vy) + Math.abs(p.orbitSpeed) * p.orbitRadius;
-            // Strict speed ceiling: particles can move relatively fast, but strictly at most 2x regular speed
-            const maxAllowedSpeed = Math.max(0.65, regularSpeed * 2.0);
-
-            // Decay individual release progress (0.3s - 0.5s range)
+            // On click release: closest particles disperse outward with high speed within 0.3s to 0.5s range
             if (p.releaseProgress > 0) {
               p.releaseProgress = Math.max(0, p.releaseProgress - deltaMs / p.releaseDuration);
+              const ease = p.releaseProgress * p.releaseProgress; // smooth deceleration into free float
+              p.x += p.disperseVx * ease;
+              p.y += p.disperseVy * ease;
+              // Synchronize home orbit position so the particle stays far away from cursor in free space
+              p.originX = p.x - Math.cos(p.orbitAngle) * p.orbitRadius;
+              p.originY = p.y - Math.sin(p.orbitAngle) * p.orbitRadius;
             }
+
+            const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
+            const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
             // Interactive dynamic orbital vortex around cursor center
             const dx = p.x - mouse.x;
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            // Gravity strictly 0 beyond outerGravityRadius
-            const isInGravityRange = dist <= outerGravityRadius && dist > 0.1 && mouse.active;
-            const isHeldOrReleasing = mouse.isMouseDown || p.releaseProgress > 0;
+            // Gravity strictly 0 beyond outerGravityRadius, or while gravity is suppressed during the 0.6s release window
+            const isInGravityRange = !isGravitySuppressed && dist <= outerGravityRadius && dist > 0.1 && mouse.active;
 
-            if (isInGravityRange && (dist <= innerRadius || isHeldOrReleasing || stationaryProgress > 0)) {
+            if (isInGravityRange && (dist <= innerRadius || mouse.isMouseDown || stationaryProgress > 0)) {
               // Calculate gradient force: 1.0 inside innerRadius, smoothly tapering to 0.0 at outerGravityRadius
               let gravityStrength = 1.0;
               if (dist > innerRadius) {
@@ -301,19 +324,18 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult * gravityStrength;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // Individual smooth blend: when releasing, smoothly expands back from compressed orbit into free space
-              const effectiveTension = mouse.isMouseDown ? easedProgress : p.releaseProgress;
-              const particleOrbitCompression = 1.0 - effectiveTension * 0.2;
-              const particleMinOrbitDist = 32 - effectiveTension * 8;
+              // Individual smooth blend: when holding click, compress orbit
+              const particleOrbitCompression = 1.0 - easedProgress * 0.2;
+              const particleMinOrbitDist = 32 - easedProgress * 8;
               const clampedOrbitDist = Math.max(particleMinOrbitDist, dist * particleOrbitCompression);
 
               const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
               const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
 
-              // Graceful, smooth attraction pull speed weighted by gravity gradient
-              const effectivePull = pullSpeed * gravityStrength * (mouse.isMouseDown ? 1.0 : (p.releaseProgress > 0 ? effectiveTension : 0.7));
+              // Attraction pull speed weighted by gravity gradient
+              const effectivePull = pullSpeed * gravityStrength * (mouse.isMouseDown ? 1.0 : 0.7);
 
-              // Keep origin gently following the particle so when released into free space, it doesn't snap
+              // Keep origin following the particle
               p.originX = p.x - Math.cos(p.orbitAngle) * p.orbitRadius;
               p.originY = p.y - Math.sin(p.orbitAngle) * p.orbitRadius;
 
@@ -321,22 +343,28 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               p.y += (orbitalTargetY - p.y) * effectivePull;
 
               const force = Math.max(0, (innerRadius - dist) / innerRadius);
-              p.radius = p.baseRadius * (1 + force * (0.3 + effectiveTension * 0.15));
-              p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + effectiveTension * 0.15));
+              p.radius = p.baseRadius * (1 + force * (0.3 + easedProgress * 0.15));
+              p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + easedProgress * 0.15));
             } else {
-              // Strictly 0 gravity beyond outer boundary: smoothly relaxes to wandering free space orbit
-              // Clamped to at most 2x regular speed so particles never travel at super speed across the screen
-              let stepX = (targetX - p.x) * 0.055;
-              let stepY = (targetY - p.y) * 0.055;
-              const stepDist = Math.hypot(stepX, stepY);
+              // Strictly 0 gravity beyond outer boundary (or during 0.6s release cooldown)
+              // Clamped to at most 2x regular speed for ambient relaxation, without slowing down active dispersion
+              if (p.releaseProgress <= 0) {
+                const regularSpeed = Math.hypot(p.vx, p.vy) + Math.abs(p.orbitSpeed) * p.orbitRadius;
+                const maxAllowedSpeed = Math.max(0.65, regularSpeed * 2.0);
 
-              if (stepDist > maxAllowedSpeed) {
-                stepX = (stepX / stepDist) * maxAllowedSpeed;
-                stepY = (stepY / stepDist) * maxAllowedSpeed;
+                let stepX = (targetX - p.x) * 0.055;
+                let stepY = (targetY - p.y) * 0.055;
+                const stepDist = Math.hypot(stepX, stepY);
+
+                if (stepDist > maxAllowedSpeed) {
+                  stepX = (stepX / stepDist) * maxAllowedSpeed;
+                  stepY = (stepY / stepDist) * maxAllowedSpeed;
+                }
+
+                p.x += stepX;
+                p.y += stepY;
               }
 
-              p.x += stepX;
-              p.y += stepY;
               p.radius += (p.baseRadius - p.radius) * 0.06;
               p.alpha += (p.baseAlpha - p.alpha) * 0.06;
             }
@@ -374,9 +402,9 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
         }
 
         // 2. Cursor-to-particle connecting edges (emanating from exact center of cursor dot with 0.7s temporary formation prominence)
-        // Edge connection distance expands gracefully alongside the stationary gravity field
-        const connectionRadius = outerGravityRadius;
-        if (mouse.active && mouse.x > 0 && mouse.y > 0) {
+        // Strictly 0 edges while gravity is suppressed during the 0.6s release cooldown
+        const connectionRadius = isGravitySuppressed ? 0 : outerGravityRadius;
+        if (mouse.active && !isGravitySuppressed && mouse.x > 0 && mouse.y > 0) {
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
             const dx = p.x - mouse.x;

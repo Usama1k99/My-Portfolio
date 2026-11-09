@@ -46,7 +46,7 @@ export const TypewriterHeadline: React.FC<TypewriterProps> = ({
 
   return (
     <span className="inline-flex items-center text-lg sm:text-xl font-mono font-medium tracking-tight">
-      <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
+      <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-emerald-400 bg-clip-text text-transparent">
         {displayText}
       </span>
       {/* Blinking Caret */}

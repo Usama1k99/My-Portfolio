@@ -12,13 +12,10 @@ export const Hero: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col-reverse lg:flex-row items-center justify-between gap-12 lg:gap-16">
           <div className="flex-1 text-center lg:text-left">
-            {/* Minimalist Authentic Developer Status Indicator (Anti-AI) */}
-            <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-md border border-slate-800 bg-slate-900/90 text-xs font-mono text-slate-300 mb-6 shadow-inner tracking-tight">
-              <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400 ring-4 ring-cyan-500/10"></span>
-              <span className="text-slate-500 font-normal">role //</span>
-              <span className="text-slate-200 font-medium">ServiceNow Developer</span>
-              <span className="text-slate-600">@</span>
-              <span className="text-cyan-400 font-medium">Cynosure Technologies</span>
+            {/* Simple, direct professional status */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-800 bg-slate-900/90 text-xs font-mono text-slate-300 mb-6">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 ring-4 ring-emerald-500/10"></span>
+              <span className="text-slate-200">ServiceNow Developer at Cynosure Technologies</span>
             </div>
 
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-4">
@@ -35,8 +32,8 @@ export const Hero: React.FC = () => {
             </p>
 
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 text-xs sm:text-sm mb-8 font-mono">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-950/30 border border-indigo-900/40 text-indigo-300 shadow-sm">
-                <Building2 size={15} className="text-indigo-400" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-950/30 border border-sky-900/40 text-sky-300 shadow-sm">
+                <Building2 size={15} className="text-sky-400" />
                 <span>Cynosure Technologies</span>
               </div>
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/30 border border-emerald-900/40 text-emerald-300 shadow-sm">
@@ -56,7 +53,7 @@ export const Hero: React.FC = () => {
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
               <a
                 href="#projects"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-cyan-950/40 hover:shadow-cyan-950/70 hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-400 hover:to-emerald-500 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-cyan-950/40 hover:shadow-cyan-950/70 hover:-translate-y-0.5"
               >
                 <span>View Projects</span>
                 <ArrowUpRight size={16} />

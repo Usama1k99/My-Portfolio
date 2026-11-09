@@ -47,11 +47,11 @@ export const App: React.FC = () => {
       case 2:
       default:
         return {
-          iconColor: 'text-indigo-400',
-          iconBg: 'bg-indigo-500/10 border-indigo-500/30',
-          hoverBorder: 'hover:border-indigo-500/40',
-          accentGradient: 'group-hover:via-indigo-400/60',
-          levelBadge: 'text-indigo-300 bg-indigo-950/40 border-indigo-800/50',
+          iconColor: 'text-teal-400',
+          iconBg: 'bg-teal-500/10 border-teal-500/30',
+          hoverBorder: 'hover:border-teal-500/40',
+          accentGradient: 'group-hover:via-teal-400/60',
+          levelBadge: 'text-teal-300 bg-teal-950/40 border-teal-800/50',
         };
     }
   };
@@ -78,7 +78,7 @@ export const App: React.FC = () => {
         <section id="experience" className="py-16 md:py-24 border-t border-slate-800/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3 mb-8">
-              <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+              <div className="p-2 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sky-400">
                 <Briefcase size={20} />
               </div>
               <div>
@@ -96,17 +96,17 @@ export const App: React.FC = () => {
                 <TiltCard
                   key={idx}
                   maxTilt={4}
-                  className="relative p-6 sm:p-8 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
+                  className="relative p-6 sm:p-8 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-sky-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                 >
                   {/* Subtle top border illumination */}
-                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/0 to-transparent group-hover:via-indigo-400/60 transition-all duration-500" />
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-500/0 to-transparent group-hover:via-sky-400/60 transition-all duration-500" />
 
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-white group-hover:text-indigo-300 transition-colors duration-200">
+                      <h3 className="text-xl font-semibold text-white group-hover:text-sky-300 transition-colors duration-200">
                         {exp.role}
                       </h3>
-                      <div className="flex items-center gap-2 text-indigo-400 font-mono text-sm mt-1">
+                      <div className="flex items-center gap-2 text-sky-400 font-mono text-sm mt-1">
                         <span>{exp.company}</span>
                         <span>•</span>
                         <span className="flex items-center gap-1 text-slate-400">
@@ -118,7 +118,7 @@ export const App: React.FC = () => {
 
                     <div className="flex items-center gap-3 text-xs font-mono text-slate-400">
                       <span className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-950 border border-slate-800">
-                        <Calendar size={13} className="text-indigo-400" />
+                        <Calendar size={13} className="text-sky-400" />
                         {exp.period}
                       </span>
                       <span className="px-2.5 py-1 rounded bg-cyan-950/40 text-cyan-300 border border-cyan-800/40 font-medium">
@@ -212,7 +212,7 @@ export const App: React.FC = () => {
               {/* Education */}
               <div>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+                  <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
                     <Award size={20} />
                   </div>
                   <div>
@@ -230,17 +230,17 @@ export const App: React.FC = () => {
                     <TiltCard
                       key={idx}
                       maxTilt={5}
-                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
+                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/60 backdrop-blur-sm hover:border-emerald-500/40 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                     >
-                      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/0 to-transparent group-hover:via-indigo-400/60 transition-all duration-500" />
+                      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/0 to-transparent group-hover:via-emerald-400/60 transition-all duration-500" />
 
                       <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="text-xs font-mono px-2.5 py-1 rounded bg-indigo-950/50 text-indigo-300 border border-indigo-800/50 font-semibold">
+                        <span className="text-xs font-mono px-2.5 py-1 rounded bg-emerald-950/50 text-emerald-300 border border-emerald-800/50 font-semibold">
                           Graduated {edu.completionYear}
                         </span>
                         <span className="text-xs font-mono text-cyan-400">{edu.status}</span>
                       </div>
-                      <h3 className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors">
+                      <h3 className="text-lg font-semibold text-white group-hover:text-emerald-300 transition-colors">
                         {edu.degree}
                       </h3>
                       <p className="text-sm text-slate-400 font-mono mt-0.5">{edu.field}</p>
@@ -250,7 +250,7 @@ export const App: React.FC = () => {
                       <div className="space-y-1.5 mt-4">
                         {edu.highlights.map((hl, hIdx) => (
                           <div key={hIdx} className="flex items-center gap-2 text-xs text-slate-400">
-                            <span className="text-indigo-400">•</span>
+                            <span className="text-emerald-400">•</span>
                             <span>{hl}</span>
                           </div>
                         ))}
@@ -337,7 +337,7 @@ export const App: React.FC = () => {
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <a
                   href={`mailto:${personal.email}`}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-cyan-950/40 hover:shadow-cyan-950/70 hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-600 hover:from-cyan-400 hover:to-emerald-500 text-white font-medium text-sm transition-all duration-200 shadow-md shadow-cyan-950/40 hover:shadow-cyan-950/70 hover:-translate-y-0.5"
                 >
                   <Mail size={16} />
                   <span>{personal.email}</span>

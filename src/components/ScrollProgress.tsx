@@ -24,7 +24,7 @@ export const ScrollProgress: React.FC = () => {
       aria-hidden="true"
     >
       <div
-        className="h-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-emerald-400 transition-all duration-75 ease-out shadow-[0_0_8px_rgba(6,182,212,0.6)]"
+        className="h-full bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 transition-all duration-75 ease-out shadow-[0_0_8px_rgba(6,182,212,0.6)]"
         style={{ width: `${scrollProgress}%` }}
       />
     </div>

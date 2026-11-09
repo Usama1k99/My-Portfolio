@@ -18,10 +18,10 @@ export const Projects: React.FC = () => {
     switch (category) {
       case 'Desktop App':
         return {
-          icon: <Lock size={16} className="text-indigo-400" />,
-          badge: 'text-indigo-300 bg-indigo-950/40 border-indigo-900/50',
-          accentBorder: 'group-hover:via-indigo-400/70',
-          bulletColor: 'text-indigo-400',
+          icon: <Lock size={16} className="text-cyan-400" />,
+          badge: 'text-cyan-300 bg-cyan-950/40 border-cyan-900/50',
+          accentBorder: 'group-hover:via-cyan-400/70',
+          bulletColor: 'text-cyan-400',
         };
       case 'Web Engineering':
         return {
@@ -39,10 +39,10 @@ export const Projects: React.FC = () => {
         };
       case 'Systems / C++':
         return {
-          icon: <Binary size={16} className="text-purple-400" />,
-          badge: 'text-purple-300 bg-purple-950/40 border-purple-900/50',
-          accentBorder: 'group-hover:via-purple-400/70',
-          bulletColor: 'text-purple-400',
+          icon: <Binary size={16} className="text-teal-400" />,
+          badge: 'text-teal-300 bg-teal-950/40 border-teal-900/50',
+          accentBorder: 'group-hover:via-teal-400/70',
+          bulletColor: 'text-teal-400',
         };
       default:
         return {

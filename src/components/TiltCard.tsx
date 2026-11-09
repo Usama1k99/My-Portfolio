@@ -75,13 +75,13 @@ export const TiltCard: React.FC<TiltCardProps> = ({
     >
       {children}
 
-      {/* Dynamic Cursor Spotlight Glare Sheen */}
+      {/* Dynamic Cursor Spotlight Glare Sheen (matched to 65px glow radius) */}
       {glare && (
         <div
           className="pointer-events-none absolute inset-0 rounded-xl transition-opacity duration-300"
           style={{
             opacity: style.isHovered ? 1 : 0,
-            background: `radial-gradient(circle 220px at ${style.glareX}% ${style.glareY}%, rgba(255, 255, 255, 0.05), transparent 75%)`,
+            background: `radial-gradient(circle 65px at ${style.glareX}% ${style.glareY}%, rgba(255, 255, 255, 0.06), transparent 100%)`,
           }}
           aria-hidden="true"
         />

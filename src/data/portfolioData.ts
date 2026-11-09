@@ -18,7 +18,7 @@ export const portfolioData: PortfolioData = {
       company: "Cynosure Technologies",
       role: "ServiceNow Developer",
       location: "Hyderabad, India",
-      period: "2025 – Present",
+      period: "2025 - Present",
       duration: "1 Year",
       description: "Spearheading enterprise ServiceNow implementations with a focus on CMDB health, data architecture, and workflow automation.",
       highlights: [
@@ -35,7 +35,7 @@ export const portfolioData: PortfolioData = {
     {
       name: "ServiceNow CIS-DF",
       code: "CIS-DF",
-      fullName: "Certified Implementation Specialist – Data Foundations (CMDB & CSDM)",
+      fullName: "Certified Implementation Specialist: Data Foundations (CMDB & CSDM)",
       issuer: "ServiceNow",
       status: "Active",
       skillsCovered: [
@@ -49,7 +49,7 @@ export const portfolioData: PortfolioData = {
 
   education: [
     {
-      degree: "Bachelor of Technology (B.Tech) / B.E.",
+      degree: "Bachelor of Technology (B.Tech)",
       field: "Computer Science & Engineering",
       institution: "Shadan College of Engineering and Technology",
       location: "Hyderabad, Telangana",
@@ -101,7 +101,7 @@ export const portfolioData: PortfolioData = {
   projects: [
     {
       id: "enigmatrix",
-      title: "Enigmatrix — High-Performance Encryption Engine",
+      title: "Enigmatrix: High-Performance Encryption Engine",
       category: "Desktop App",
       language: "Python / PyQt6",
       description: "Custom high-performance desktop file encryption tool featuring 1024×1024 subkey matrix generation, PRNG-driven permutations, multi-threaded CPU parallel execution, and optional RSA key wrapping.",
@@ -118,7 +118,7 @@ export const portfolioData: PortfolioData = {
     },
     {
       id: "encryptify",
-      title: "Encryptify (encsite) — Cryptographic Suite",
+      title: "Encryptify (encsite): Cryptographic Suite",
       category: "Web Engineering",
       language: "Python / Django",
       description: "Full-stack cryptographic web platform and core algorithm suite integrating custom block ciphers, image pixel scrambling, steganography, and multi-cipher text encryption.",

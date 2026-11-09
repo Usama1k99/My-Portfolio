@@ -186,26 +186,32 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
-            // Interactive soft magnetic deflection around cursor (gentle curve instead of rapid accumulation)
-            const dx = mouse.x - p.x;
-            const dy = mouse.y - p.y;
+            // Interactive dynamic orbital vortex around cursor (revolves when stationary)
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            if (dist < mouse.radius && dist > 0.1) {
+            if (dist < mouse.radius && dist > 0.1 && mouse.active) {
               const force = (mouse.radius - dist) / mouse.radius; // 0 to 1
-              const angle = Math.atan2(dy, dx);
-              const swirlAngle = angle + Math.PI * 0.5;
-              const swirlForce = force * 0.7;
-              const deflectForce = force * 0.8;
+              const currentAngle = Math.atan2(dy, dx);
+              // Orbit speed variation with alternating direction for organic depth
+              const orbitDir = i % 2 === 0 ? 1 : -1;
+              const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir;
+              const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // Gentle deflection and orbital curve
-              p.x -= Math.cos(swirlAngle) * swirlForce + (dx / dist) * deflectForce;
-              p.y -= Math.sin(swirlAngle) * swirlForce + (dy / dist) * deflectForce;
+              // Retain comfortable orbit distance within the 65px radius zone
+              const clampedOrbitDist = Math.max(18, dist);
+              const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
+              const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
 
-              p.radius = p.baseRadius * (1 + force * 0.35);
-              p.alpha = Math.min(0.85, p.baseAlpha + force * 0.25);
+              // Smoothly blend toward orbital path
+              p.x += (orbitalTargetX - p.x) * 0.22;
+              p.y += (orbitalTargetY - p.y) * 0.22;
+
+              p.radius = p.baseRadius * (1 + force * 0.3);
+              p.alpha = Math.min(0.85, p.baseAlpha + force * 0.3);
             } else {
-              // Gentle spring relaxation back to natural orbit
+              // Gentle spring relaxation back to natural wandering orbit
               p.x += (targetX - p.x) * 0.045;
               p.y += (targetY - p.y) * 0.045;
               p.radius += (p.baseRadius - p.radius) * 0.06;

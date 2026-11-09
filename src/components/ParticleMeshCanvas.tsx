@@ -311,38 +311,46 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             // Gravity strictly 0 beyond outerGravityRadius, or while gravity is suppressed during the 0.6s release window
             const isInGravityRange = !isGravitySuppressed && dist <= outerGravityRadius && dist > 0.1 && mouse.active;
 
-            if (isInGravityRange && (dist <= innerRadius || mouse.isMouseDown || stationaryProgress > 0)) {
-              // Calculate gradient force: 1.0 inside innerRadius, smoothly tapering to 0.0 at outerGravityRadius
-              let gravityStrength = 1.0;
-              if (dist > innerRadius) {
-                const t = (outerGravityRadius - dist) / Math.max(1, outerGravityRadius - innerRadius);
-                gravityStrength = Math.max(0, Math.min(1, t));
-              }
-
+            if (isInGravityRange) {
               const currentAngle = Math.atan2(dy, dx);
               const orbitDir = i % 2 === 0 ? 1 : -1;
-              const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult * gravityStrength;
+
+              let targetDist: number;
+              let orbitAngularSpeed: number;
+              let effectivePull: number;
+              let force: number;
+
+              if (dist <= innerRadius || mouse.isMouseDown) {
+                // Inner vortex orbit: particles orbit close to the cursor, compressing on click
+                const particleOrbitCompression = 1.0 - easedProgress * 0.2;
+                const particleMinOrbitDist = 32 - easedProgress * 8;
+                targetDist = Math.max(particleMinOrbitDist, dist * particleOrbitCompression);
+
+                orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult;
+                effectivePull = pullSpeed * (mouse.isMouseDown ? 1.0 : 0.75);
+                force = Math.max(0, (innerRadius - dist) / innerRadius);
+              } else {
+                // Outer radius particles: revolve around cursor in their own radius / orbit
+                targetDist = dist; // maintain their own orbital distance
+                // Smooth capture factor as outer radius envelopes the particle
+                const captureT = Math.min(1.0, Math.max(0.2, (outerGravityRadius - dist) / 20));
+                // Revolving speed around cursor in their own concentric ring
+                orbitAngularSpeed = (0.020 + p.pulseSpeed * 0.3) * orbitDir * captureT;
+                effectivePull = 0.5 * captureT;
+                force = Math.max(0, (outerGravityRadius - dist) / Math.max(1, outerGravityRadius - innerRadius)) * 0.5;
+              }
+
               const nextAngle = currentAngle + orbitAngularSpeed;
+              const orbitalTargetX = mouse.x + Math.cos(nextAngle) * targetDist;
+              const orbitalTargetY = mouse.y + Math.sin(nextAngle) * targetDist;
 
-              // Individual smooth blend: when holding click, compress orbit
-              const particleOrbitCompression = 1.0 - easedProgress * 0.2;
-              const particleMinOrbitDist = 32 - easedProgress * 8;
-              const clampedOrbitDist = Math.max(particleMinOrbitDist, dist * particleOrbitCompression);
-
-              const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
-              const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
-
-              // Attraction pull speed weighted by gravity gradient
-              const effectivePull = pullSpeed * gravityStrength * (mouse.isMouseDown ? 1.0 : 0.7);
-
-              // Keep origin following the particle
+              // Keep home orbit synchronized
               p.originX = p.x - Math.cos(p.orbitAngle) * p.orbitRadius;
               p.originY = p.y - Math.sin(p.orbitAngle) * p.orbitRadius;
 
               p.x += (orbitalTargetX - p.x) * effectivePull;
               p.y += (orbitalTargetY - p.y) * effectivePull;
 
-              const force = Math.max(0, (innerRadius - dist) / innerRadius);
               p.radius = p.baseRadius * (1 + force * (0.3 + easedProgress * 0.15));
               p.alpha = Math.min(0.9, p.baseAlpha + force * (0.3 + easedProgress * 0.15));
             } else {

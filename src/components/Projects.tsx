@@ -92,7 +92,7 @@ export const Projects: React.FC = () => {
               <TiltCard
                 key={project.id}
                 maxTilt={6.5}
-                className="relative flex flex-col justify-between p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[5px] card-blur-5px hover:border-slate-700/80 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/80 transition-all duration-300 group overflow-hidden"
+                className="relative flex flex-col justify-between p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[2px] card-blur-2px hover:border-slate-700/80 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/80 transition-all duration-300 group overflow-hidden"
               >
                 {/* Subtle top border glow on card hover */}
                 <div

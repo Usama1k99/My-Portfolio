@@ -96,7 +96,7 @@ export const App: React.FC = () => {
                 <TiltCard
                   key={idx}
                   maxTilt={4}
-                  className="relative p-6 sm:p-8 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[5px] card-blur-5px hover:border-sky-500/40 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
+                  className="relative p-6 sm:p-8 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[2px] card-blur-2px hover:border-sky-500/40 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                 >
                   {/* Subtle top border illumination */}
                   <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-sky-500/0 to-transparent group-hover:via-sky-400/60 transition-all duration-500" />
@@ -181,7 +181,7 @@ export const App: React.FC = () => {
                     <TiltCard
                       key={idx}
                       maxTilt={5}
-                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[5px] card-blur-5px hover:border-emerald-500/40 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
+                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[2px] card-blur-2px hover:border-emerald-500/40 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                     >
                       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/0 to-transparent group-hover:via-emerald-400/60 transition-all duration-500" />
 
@@ -230,7 +230,7 @@ export const App: React.FC = () => {
                     <TiltCard
                       key={idx}
                       maxTilt={5}
-                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[5px] card-blur-5px hover:border-emerald-500/40 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
+                      className="relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[2px] card-blur-2px hover:border-emerald-500/40 hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group"
                     >
                       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-emerald-500/0 to-transparent group-hover:via-emerald-400/60 transition-all duration-500" />
 
@@ -291,7 +291,7 @@ export const App: React.FC = () => {
                   <TiltCard
                     key={idx}
                     maxTilt={5}
-                    className={`relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[5px] card-blur-5px ${theme.hoverBorder} hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group`}
+                    className={`relative p-6 rounded-xl border border-slate-800/90 bg-slate-900/85 backdrop-blur-[2px] card-blur-2px ${theme.hoverBorder} hover:bg-slate-900/95 hover:shadow-2xl hover:shadow-slate-950/70 transition-all duration-300 overflow-hidden group`}
                   >
                     <div
                       className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500/0 to-transparent ${theme.accentGradient} transition-all duration-500`}

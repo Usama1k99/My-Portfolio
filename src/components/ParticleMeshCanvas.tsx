@@ -44,15 +44,15 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
 
-    // Interactive mouse state with direct tracking for edge connections
+    // Interactive mouse state with direct tracking and click gravity
     const mouse = {
       x: -9999,
       y: -9999,
       targetX: -9999,
       targetY: -9999,
-      radius: 75,
-      glowRadius: 75,
+      radius: 80,
       active: false,
+      isMouseDown: false,
     };
 
     const resize = () => {
@@ -75,15 +75,26 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       mouse.active = true;
     };
 
+    const onMouseDown = () => {
+      mouse.isMouseDown = true;
+    };
+
+    const onMouseUp = () => {
+      mouse.isMouseDown = false;
+    };
+
     const onMouseLeave = () => {
       mouse.x = -9999;
       mouse.y = -9999;
       mouse.targetX = -9999;
       mouse.targetY = -9999;
       mouse.active = false;
+      mouse.isMouseDown = false;
     };
 
     window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mouseup', onMouseUp);
     window.addEventListener('mouseleave', onMouseLeave);
 
     const effectiveCount = width < 768 ? Math.floor(particleCount * 0.5) : particleCount;
@@ -147,24 +158,9 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
         renderCtx.clearRect(0, 0, width, height);
 
-        // Subtle ambient cursor luminescence
-        if (mouse.active && mouse.x > 0 && mouse.y > 0) {
-          const radialGlow = renderCtx.createRadialGradient(
-            mouse.x,
-            mouse.y,
-            0,
-            mouse.x,
-            mouse.y,
-            mouse.glowRadius
-          );
-          radialGlow.addColorStop(0, 'rgba(6, 182, 212, 0.05)');
-          radialGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.015)');
-          radialGlow.addColorStop(1, 'rgba(15, 23, 42, 0)');
-          renderCtx.fillStyle = radialGlow;
-          renderCtx.beginPath();
-          renderCtx.arc(mouse.x, mouse.y, mouse.glowRadius, 0, Math.PI * 2);
-          renderCtx.fill();
-        }
+        // Dynamic gravity parameters
+        const currentRadius = mouse.isMouseDown ? 150 : 80;
+        const minOrbitDist = mouse.isMouseDown ? 6 : 18;
 
         // Update particles physics and orbital vortex
         for (let i = 0; i < particles.length; i++) {
@@ -184,30 +180,33 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const targetX = p.originX + Math.cos(p.orbitAngle) * p.orbitRadius;
             const targetY = p.originY + Math.sin(p.orbitAngle) * p.orbitRadius;
 
-            // Interactive dynamic orbital vortex around cursor (revolves when stationary)
+            // Interactive dynamic orbital vortex around cursor (with click gravity)
             const dx = p.x - mouse.x;
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            if (dist < mouse.radius && dist > 0.1 && mouse.active) {
-              const force = (mouse.radius - dist) / mouse.radius; // 0 to 1
+            if (dist < currentRadius && dist > 0.1 && mouse.active) {
+              const force = (currentRadius - dist) / currentRadius; // 0 to 1
               const currentAngle = Math.atan2(dy, dx);
-              // Orbit speed variation with alternating direction for organic depth
               const orbitDir = i % 2 === 0 ? 1 : -1;
-              const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir;
+              const speedMult = mouse.isMouseDown ? 1.6 : 1.0;
+              const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir * speedMult;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // Retain comfortable orbit distance within the radius zone
-              const clampedOrbitDist = Math.max(18, dist);
+              // On click: closer particles get pulled even closer to the dot
+              const orbitCompression = mouse.isMouseDown ? 0.45 : 1.0;
+              const clampedOrbitDist = Math.max(minOrbitDist, dist * orbitCompression);
+
               const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
               const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
 
-              // Smoothly blend toward orbital path
-              p.x += (orbitalTargetX - p.x) * 0.22;
-              p.y += (orbitalTargetY - p.y) * 0.22;
+              // Faster attraction pull speed on click
+              const pullSpeed = mouse.isMouseDown ? 0.38 : 0.22;
+              p.x += (orbitalTargetX - p.x) * pullSpeed;
+              p.y += (orbitalTargetY - p.y) * pullSpeed;
 
-              p.radius = p.baseRadius * (1 + force * 0.3);
-              p.alpha = Math.min(0.85, p.baseAlpha + force * 0.3);
+              p.radius = p.baseRadius * (1 + force * (mouse.isMouseDown ? 0.5 : 0.3));
+              p.alpha = Math.min(0.9, p.baseAlpha + force * (mouse.isMouseDown ? 0.45 : 0.3));
             } else {
               // Gentle spring relaxation back to natural wandering orbit
               p.x += (targetX - p.x) * 0.045;
@@ -220,7 +219,31 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
           }
         }
 
-        // Draw connecting edges from cursor dot to surrounding particles within range
+        // 1. Render subtle ambient particle-to-particle mesh edges (subtler default edges)
+        const maxMeshDist = width < 768 ? 65 : 80;
+        for (let i = 0; i < particles.length; i++) {
+          const pi = particles[i];
+          for (let j = i + 1; j < particles.length; j++) {
+            const pj = particles[j];
+            const dx = pi.x - pj.x;
+            const dy = pi.y - pj.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < maxMeshDist) {
+              const proximity = (maxMeshDist - dist) / maxMeshDist;
+              const alpha = proximity * 0.12;
+
+              renderCtx.beginPath();
+              renderCtx.moveTo(pi.x, pi.y);
+              renderCtx.lineTo(pj.x, pj.y);
+              renderCtx.strokeStyle = `rgba(148, 163, 184, ${alpha})`;
+              renderCtx.lineWidth = 0.55;
+              renderCtx.stroke();
+            }
+          }
+        }
+
+        // 2. Render prominent cursor-to-particle connecting edges (visibly more prominent than default)
         if (mouse.active && mouse.x > 0 && mouse.y > 0) {
           for (let i = 0; i < particles.length; i++) {
             const p = particles[i];
@@ -228,9 +251,9 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
             const dy = p.y - mouse.y;
             const dist = Math.hypot(dx, dy);
 
-            if (dist < mouse.radius && dist > 0.1) {
-              const proximity = (mouse.radius - dist) / mouse.radius; // 1 at center, 0 at boundary
-              const alpha = Math.max(0.08, proximity * 0.6);
+            if (dist < currentRadius && dist > 0.1) {
+              const proximity = (currentRadius - dist) / currentRadius; // 1 at center, 0 at boundary
+              const alpha = Math.max(0.18, proximity * (mouse.isMouseDown ? 0.85 : 0.65));
 
               renderCtx.beginPath();
               renderCtx.moveTo(mouse.x, mouse.y);
@@ -239,13 +262,13 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
                 p.colorType === 'emerald'
                   ? `rgba(16, 185, 129, ${alpha})`
                   : `rgba(6, 182, 212, ${alpha})`;
-              renderCtx.lineWidth = Math.max(0.65, proximity * 1.5);
+              renderCtx.lineWidth = Math.max(0.85, proximity * (mouse.isMouseDown ? 2.2 : 1.7));
               renderCtx.stroke();
             }
           }
         }
 
-        // Render individual particle nodes
+        // 3. Render individual particle nodes
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
           const currentAlpha = Math.max(
@@ -269,6 +292,8 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mouseup', onMouseUp);
       window.removeEventListener('mouseleave', onMouseLeave);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };

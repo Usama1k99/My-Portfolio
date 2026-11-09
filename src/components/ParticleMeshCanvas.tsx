@@ -44,14 +44,14 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     let height = 0;
     let dpr = window.devicePixelRatio || 1;
 
-    // Interactive mouse state with smooth spring interpolation
+    // Interactive mouse state with direct tracking for edge connections
     const mouse = {
       x: -9999,
       y: -9999,
       targetX: -9999,
       targetY: -9999,
-      radius: 65,
-      glowRadius: 65,
+      radius: 75,
+      glowRadius: 75,
       active: false,
     };
 
@@ -68,18 +68,22 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
     window.addEventListener('resize', resize);
 
     const onMouseMove = (e: MouseEvent) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
       mouse.targetX = e.clientX;
       mouse.targetY = e.clientY;
       mouse.active = true;
     };
 
     const onMouseLeave = () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
       mouse.targetX = -9999;
       mouse.targetY = -9999;
       mouse.active = false;
     };
 
-    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
     window.addEventListener('mouseleave', onMouseLeave);
 
     const effectiveCount = width < 768 ? Math.floor(particleCount * 0.5) : particleCount;
@@ -91,10 +95,10 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
       const baseR = Math.random() * 1.5 + 0.6; // 0.6px to 2.1px depth
       const baseA = Math.random() * 0.45 + 0.2; // 0.2 to 0.65 opacity
 
-      // 40% cyan, 35% emerald, 25% slate silver
+      // 45% cyan, 40% emerald, 15% slate silver
       const randColor = Math.random();
       const colorType: 'cyan' | 'emerald' | 'slate' =
-        randColor < 0.4 ? 'cyan' : randColor < 0.75 ? 'emerald' : 'slate';
+        randColor < 0.45 ? 'cyan' : randColor < 0.85 ? 'emerald' : 'slate';
 
       return {
         x: rx,
@@ -136,19 +140,14 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
 
     const render = () => {
       if (isTabVisible) {
-
-        // Smooth mouse lag for organic fluid feel
-        if (mouse.active) {
-          mouse.x += (mouse.targetX - mouse.x) * 0.18;
-          mouse.y += (mouse.targetY - mouse.y) * 0.18;
-        } else {
+        if (!mouse.active) {
           mouse.x = -9999;
           mouse.y = -9999;
         }
 
         renderCtx.clearRect(0, 0, width, height);
 
-        // Reduced subtle ambient cursor luminescence
+        // Subtle ambient cursor luminescence
         if (mouse.active && mouse.x > 0 && mouse.y > 0) {
           const radialGlow = renderCtx.createRadialGradient(
             mouse.x,
@@ -167,12 +166,11 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
           renderCtx.fill();
         }
 
-        // Render individual kinetic dust particles
+        // Update particles physics and orbital vortex
         for (let i = 0; i < particles.length; i++) {
           const p = particles[i];
 
           if (!prefersReducedMotion) {
-            // Natural wandering harmonic drift
             p.orbitAngle += p.orbitSpeed;
             p.originX += p.vx;
             p.originY += p.vy;
@@ -199,7 +197,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               const orbitAngularSpeed = (0.028 + p.pulseSpeed * 0.4) * orbitDir;
               const nextAngle = currentAngle + orbitAngularSpeed;
 
-              // Retain comfortable orbit distance within the 65px radius zone
+              // Retain comfortable orbit distance within the radius zone
               const clampedOrbitDist = Math.max(18, dist);
               const orbitalTargetX = mouse.x + Math.cos(nextAngle) * clampedOrbitDist;
               const orbitalTargetY = mouse.y + Math.sin(nextAngle) * clampedOrbitDist;
@@ -218,10 +216,38 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
               p.alpha += (p.baseAlpha - p.alpha) * 0.06;
             }
 
-            // Subtle luminance pulse
             p.phase += p.pulseSpeed;
           }
+        }
 
+        // Draw connecting edges from cursor dot to surrounding particles within range
+        if (mouse.active && mouse.x > 0 && mouse.y > 0) {
+          for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist < mouse.radius && dist > 0.1) {
+              const proximity = (mouse.radius - dist) / mouse.radius; // 1 at center, 0 at boundary
+              const alpha = Math.max(0.08, proximity * 0.6);
+
+              renderCtx.beginPath();
+              renderCtx.moveTo(mouse.x, mouse.y);
+              renderCtx.lineTo(p.x, p.y);
+              renderCtx.strokeStyle =
+                p.colorType === 'emerald'
+                  ? `rgba(16, 185, 129, ${alpha})`
+                  : `rgba(6, 182, 212, ${alpha})`;
+              renderCtx.lineWidth = Math.max(0.65, proximity * 1.5);
+              renderCtx.stroke();
+            }
+          }
+        }
+
+        // Render individual particle nodes
+        for (let i = 0; i < particles.length; i++) {
+          const p = particles[i];
           const currentAlpha = Math.max(
             0.1,
             Math.min(1, p.alpha + Math.sin(p.phase) * 0.12)
@@ -251,7 +277,7 @@ export const ParticleMeshCanvas: React.FC<ParticleMeshProps> = ({
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0"
+      className="fixed inset-0 pointer-events-none z-[30]"
       aria-hidden="true"
     />
   );

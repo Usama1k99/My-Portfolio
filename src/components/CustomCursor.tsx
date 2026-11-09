@@ -129,13 +129,8 @@ export const CustomCursor: React.FC = () => {
         }
       }
 
-      if (coords.isMouseDown && !coords.activeTarget) {
-        targetW = 22;
-        targetH = 22;
-      }
-
-      // Physics interpolation: snappier when encompassing, fluid spring when free-floating
-      const lerpFactor = prefersReducedMotion ? 1 : coords.activeTarget ? 0.28 : 0.18;
+      // Physics interpolation: snappier when encompassing
+      const lerpFactor = prefersReducedMotion ? 1 : 0.28;
 
       coords.ringX += (targetX - coords.ringX) * lerpFactor;
       coords.ringY += (targetY - coords.ringY) * lerpFactor;
@@ -143,7 +138,7 @@ export const CustomCursor: React.FC = () => {
       coords.ringH += (targetH - coords.ringH) * lerpFactor;
       coords.ringRadius += (targetRadius - coords.ringRadius) * lerpFactor;
 
-      // Update ring transform & bounding box
+      // Update encompassing frame transform & bounding box
       if (ringRef.current) {
         ringRef.current.style.transform = `translate3d(${coords.ringX - coords.ringW / 2}px, ${coords.ringY - coords.ringH / 2}px, 0)`;
         ringRef.current.style.width = `${coords.ringW}px`;
@@ -182,31 +177,29 @@ export const CustomCursor: React.FC = () => {
       }`}
       aria-hidden="true"
     >
-      {/* Precision Micro-Dot: Kept as-is, locked directly to mouse position */}
+      {/* Precision Distinguishable Cursor Dot (Enhanced size & clarity) */}
       <div
         ref={dotRef}
         className="fixed top-0 left-0 pointer-events-none will-change-transform -translate-x-1/2 -translate-y-1/2"
       >
         <div
-          className={`w-1.5 h-1.5 rounded-full transition-transform duration-150 ${
+          className={`w-2.5 h-2.5 rounded-full transition-transform duration-150 ring-2 ring-cyan-400/25 ${
             isHovered
-              ? 'bg-cyan-300 scale-125 shadow-[0_0_8px_rgba(6,182,212,0.9)]'
+              ? 'bg-cyan-300 scale-110 shadow-[0_0_12px_rgba(6,182,212,0.95)] ring-cyan-300/40'
               : isMouseDown
-              ? 'bg-cyan-200 scale-75'
-              : 'bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.6)]'
+              ? 'bg-cyan-200 scale-90 shadow-[0_0_8px_rgba(6,182,212,0.7)]'
+              : 'bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)]'
           }`}
         />
       </div>
 
-      {/* Kinetic Ring: Encompasses hovered elements, or smoothly trails as circular ring */}
+      {/* Encompassing Element Frame: ONLY visible on hover over interactive elements (No free-floating ring) */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 pointer-events-none will-change-transform border transition-[border-color,background-color,box-shadow] duration-200 ${
+        className={`fixed top-0 left-0 pointer-events-none will-change-transform border transition-[opacity,border-color,background-color,box-shadow] duration-200 ${
           isHovered
-            ? 'border-cyan-400/80 bg-cyan-400/[0.08] shadow-[0_0_15px_rgba(6,182,212,0.25)]'
-            : isMouseDown
-            ? 'border-cyan-300 bg-cyan-400/20'
-            : 'border-cyan-400/40 bg-cyan-500/[0.02]'
+            ? 'opacity-100 border-cyan-400/80 bg-cyan-400/[0.08] shadow-[0_0_15px_rgba(6,182,212,0.25)]'
+            : 'opacity-0 border-transparent bg-transparent pointer-events-none'
         }`}
       />
     </div>
